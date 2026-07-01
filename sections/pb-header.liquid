@@ -15,6 +15,9 @@
   if s.transparent and template == 'index'
     assign overlay = true
   endif
+  if s.premium_collection != blank
+    assign premium_collection_url = s.premium_collection.url
+  endif
 -%}
 <header class="pb pb-header{% if overlay %} pb-header--can-overlay{% endif %}" data-pb-header
         style="--pb-h-bg:{{ s.bg }};--pb-h-fg:{{ s.fg }};--pb-h-accent:{{ s.accent }};">
@@ -46,7 +49,7 @@
       </nav>
     </div>
 
-    {%- comment -%} Center: logo {%- endcomment -%}
+    {%- comment -%} Center: logo + line toggle {%- endcomment -%}
     <div class="pb-header__logo">
       <a href="{{ routes.root_url }}" aria-label="{{ shop.name | escape }} — home">
         {%- if s.logo != blank -%}
@@ -57,6 +60,13 @@
           <span class="pb-header__wordmark">{{ s.brand | default: shop.name }}</span>
         {%- endif -%}
       </a>
+      <div class="pb-header__lines" data-pb-line-toggle
+           data-everyday-url="{{ s.everyday_url | default: routes.root_url }}"
+           data-premium-url="{{ premium_collection_url | default: '#' }}">
+        <button type="button" class="pb-header__line" data-pb-line-btn="everyday">Everyday</button>
+        <span class="pb-header__line-divider" aria-hidden="true">/</span>
+        <button type="button" class="pb-header__line" data-pb-line-btn="premium">Premium</button>
+      </div>
     </div>
 
     {%- comment -%} Right: search + account + cart {%- endcomment -%}
@@ -212,6 +222,33 @@
   }
   document.addEventListener('pb:cart:updated',refreshCount);
   document.addEventListener('cart:refresh',refreshCount);
+
+  /* ---- Everyday / Premium line toggle ---- */
+  var lineToggle=header.querySelector('[data-pb-line-toggle]');
+  if(lineToggle){
+    var everydayUrl=lineToggle.getAttribute('data-everyday-url');
+    var premiumUrl=lineToggle.getAttribute('data-premium-url');
+    function setLineUI(line){
+      lineToggle.querySelectorAll('[data-pb-line-btn]').forEach(function(btn){
+        var active=btn.getAttribute('data-pb-line-btn')===line;
+        btn.classList.toggle('is-active',active);
+        btn.setAttribute('aria-current',active?'true':'false');
+      });
+    }
+    var currentLine='everyday';
+    try{currentLine=localStorage.getItem('pb-line')==='premium'?'premium':'everyday';}catch(e){}
+    setLineUI(currentLine);
+    lineToggle.querySelector('[data-pb-line-btn="premium"]').addEventListener('click',function(){
+      try{localStorage.setItem('pb-line','premium');}catch(e){}
+      document.documentElement.setAttribute('data-pb-line','premium');
+      window.location.href=premiumUrl;
+    });
+    lineToggle.querySelector('[data-pb-line-btn="everyday"]').addEventListener('click',function(){
+      try{localStorage.setItem('pb-line','everyday');}catch(e){}
+      document.documentElement.removeAttribute('data-pb-line');
+      window.location.href=everydayUrl;
+    });
+  }
 })();
 </script>
 
@@ -223,9 +260,14 @@
 .pb-header.is-pinned .pb-header__bar{min-height:58px;}
 .pb-header__left{display:flex;align-items:center;gap:1.4rem;justify-self:start;}
 .pb-header__right{display:flex;align-items:center;gap:.4rem;justify-self:end;}
-.pb-header__logo{justify-self:center;text-align:center;}
+.pb-header__logo{justify-self:center;text-align:center;display:flex;flex-direction:column;align-items:center;gap:.15rem;}
 .pb-header__logo a{display:inline-flex;align-items:center;color:inherit;text-decoration:none;}
 .pb-header__wordmark{font-family:var(--pb-font-heading);font-size:clamp(1.25rem,3.5vw,1.7rem);font-weight:700;letter-spacing:.04em;text-transform:uppercase;}
+.pb-header__lines{display:flex;align-items:center;gap:.4rem;}
+.pb-header__line{background:transparent;border:0;padding:.1rem .15rem;margin:0;color:inherit;opacity:.55;font-family:var(--pb-font-body);font-size:.66rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;transition:opacity .25s var(--pb-ease),color .25s var(--pb-ease);}
+.pb-header__line:hover{opacity:.85;}
+.pb-header__line.is-active{opacity:1;color:var(--pb-h-accent,#D4AF37);}
+.pb-header__line-divider{opacity:.35;font-size:.66rem;}
 .pb-header__icon{display:grid;place-items:center;width:44px;height:44px;background:transparent;border:0;color:inherit;cursor:pointer;border-radius:50%;position:relative;text-decoration:none;transition:background .25s var(--pb-ease);-webkit-tap-highlight-color:transparent;}
 .pb-header__icon:hover{background:rgba(17,17,17,.06);}
 .pb-header.is-overlay .pb-header__icon:hover{background:rgba(255,255,255,.14);}
@@ -303,6 +345,9 @@ body.pb-overlay .pb-hero{margin-top:calc(var(--pb-header-h,64px) * -1);}
     { "type": "image_picker", "id": "logo_light", "label": "Logo (light — for transparent state)" },
     { "type": "range", "id": "logo_width", "min": 80, "max": 280, "step": 5, "unit": "px", "label": "Logo width", "default": 150 },
     { "type": "text", "id": "brand", "label": "Brand text (if no logo)", "default": "PUNJAB BOLDA" },
+    { "type": "header", "content": "Everyday / Premium line toggle" },
+    { "type": "collection", "id": "premium_collection", "label": "Premium collection", "info": "Shown when a shopper clicks \"Premium\". Switches the site to the black/white premium look." },
+    { "type": "url", "id": "everyday_url", "label": "Everyday link (optional)", "info": "Defaults to the homepage if left blank." },
     { "type": "header", "content": "Navigation" },
     { "type": "link_list", "id": "menu", "label": "Menu", "default": "main-menu" },
     { "type": "text", "id": "drawer_note", "label": "Mobile drawer note", "default": "Free shipping over $120 · Ships worldwide" },

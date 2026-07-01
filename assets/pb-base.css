@@ -45,6 +45,28 @@
 .pb { color: var(--pb-text); font-family: var(--pb-font-body); }
 .pb *, .pb *::before, .pb *::after { box-sizing: border-box; }
 
+/* ---- Premium line override -------------------------------------------------
+   Set by the Everyday/Premium toggle in pb-header.liquid (see pb-header script).
+   Re-declares the SAME tokens every pb- section already reads, so no section
+   needs to know a "premium mode" exists — it just gets new values for the
+   vars it already consumes. Higher specificity than :root ensures it wins
+   regardless of stylesheet order. -------------------------------------------- */
+html[data-pb-line="premium"] {
+  --pb-bg:            #000000;
+  --pb-bg-secondary:  #121212;
+  --pb-text:          #FFFFFF;
+  --pb-gold:          #FFFFFF;
+  --pb-gold-soft:     rgba(255, 255, 255, .14);
+  --pb-muted:         #9A9A9A;
+  --pb-card:          #0D0D0D;
+  --pb-line:          rgba(255, 255, 255, .14);
+  --pb-line-strong:   rgba(255, 255, 255, .24);
+}
+html[data-pb-line="premium"] body {
+  background: var(--pb-bg);
+  color: var(--pb-text);
+}
+
 .pb-wrap {
   width: 100%;
   max-width: var(--pb-maxw);
