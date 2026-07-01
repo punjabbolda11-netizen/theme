@@ -1,0 +1,120 @@
+{%- comment -%} Punjab Bolda · Addresses — native customer_address forms {%- endcomment -%}
+{%- liquid assign s = section.settings -%}
+<section class="pb pb-account" style="background:{{ s.bg }};" data-pb-addresses>
+  <div class="pb-wrap">
+    <header class="pb-account__head">
+      <div>
+        <p class="pb-eyebrow">Your account</p>
+        <h1 class="pb-h2">Addresses</h1>
+      </div>
+      <a class="pb-account__logout" href="{{ routes.account_url }}">{% render 'pb-icon', icon: 'arrow-left' %} Back to account</a>
+    </header>
+
+    <div style="margin-bottom:1.6rem;">
+      <button type="button" class="pb-btn pb-btn--gold" data-pb-addr-new-toggle>{% render 'pb-icon', icon: 'plus' %} Add a new address</button>
+    </div>
+
+    {%- comment -%} New address form ------------------------------------------- {%- endcomment -%}
+    <div class="pb-aside-card" data-pb-addr-new hidden style="margin-bottom:2rem;max-width:640px;">
+      <h2 class="pb-panel__title">New address</h2>
+      {%- form 'customer_address', customer.new_address -%}
+        <div class="pb-field"><label for="addr-new-first">First name</label><input type="text" id="addr-new-first" name="address[first_name]" autocomplete="given-name"></div>
+        <div class="pb-field"><label for="addr-new-last">Last name</label><input type="text" id="addr-new-last" name="address[last_name]" autocomplete="family-name"></div>
+        <div class="pb-field"><label for="addr-new-company">Company</label><input type="text" id="addr-new-company" name="address[company]" autocomplete="organization"></div>
+        <div class="pb-field"><label for="addr-new-1">Address</label><input type="text" id="addr-new-1" name="address[address1]" autocomplete="address-line1"></div>
+        <div class="pb-field"><label for="addr-new-2">Apartment, suite, etc.</label><input type="text" id="addr-new-2" name="address[address2]" autocomplete="address-line2"></div>
+        <div class="pb-field"><label for="addr-new-city">City</label><input type="text" id="addr-new-city" name="address[city]" autocomplete="address-level2"></div>
+        <div class="pb-field"><label for="addr-new-country">Country / region</label><select id="addr-new-country" name="address[country]" data-pb-country data-default="{{ customer.new_address.country }}">{{ country_option_tags }}</select></div>
+        <div class="pb-field" data-pb-province-wrap><label for="addr-new-province">Province / state</label><select id="addr-new-province" name="address[province]" data-pb-province data-default="{{ customer.new_address.province }}"></select></div>
+        <div class="pb-field"><label for="addr-new-zip">Postal / ZIP code</label><input type="text" id="addr-new-zip" name="address[zip]" autocomplete="postal-code"></div>
+        <div class="pb-field"><label for="addr-new-phone">Phone</label><input type="tel" id="addr-new-phone" name="address[phone]" autocomplete="tel"></div>
+        <label style="display:flex;gap:.6rem;align-items:center;font-size:.86rem;margin-bottom:1rem;"><input type="checkbox" name="address[default]" value="true" style="width:auto;min-height:auto;"> Set as default address</label>
+        <div class="pb-actions"><button type="submit" class="pb-btn pb-btn--gold">Save address</button><button type="button" class="pb-btn pb-btn--ghost" data-pb-addr-new-toggle>Cancel</button></div>
+      {%- endform -%}
+    </div>
+
+    {%- comment -%} Existing addresses ----------------------------------------- {%- endcomment -%}
+    {%- if customer.addresses.size > 0 -%}
+      <div class="pb-addresses__list">
+        {%- for address in customer.addresses -%}
+          <div class="pb-aside-card pb-address" data-pb-address>
+            {%- if address == customer.default_address -%}<span class="pb-badge pb-badge--fulfilled" style="margin-bottom:.6rem;display:inline-block;">Default</span>{%- endif -%}
+            <address>{{ address | format_address }}</address>
+            <div class="pb-actions" style="margin-top:1rem;">
+              <button type="button" class="pb-auth__link" data-pb-addr-edit-toggle="{{ address.id }}">Edit</button>
+              <button type="button" class="pb-auth__link" data-pb-addr-delete data-url="{{ address.url }}" style="color:#b23b3b;">Delete</button>
+            </div>
+
+            <div class="pb-address__edit" data-pb-addr-edit="{{ address.id }}" hidden style="margin-top:1.2rem;border-top:1px solid var(--pb-line);padding-top:1.2rem;">
+              {%- form 'customer_address', address -%}
+                <div class="pb-field"><label for="addr-{{ address.id }}-first">First name</label><input type="text" id="addr-{{ address.id }}-first" name="address[first_name]" value="{{ address.first_name }}" autocomplete="given-name"></div>
+                <div class="pb-field"><label for="addr-{{ address.id }}-last">Last name</label><input type="text" id="addr-{{ address.id }}-last" name="address[last_name]" value="{{ address.last_name }}" autocomplete="family-name"></div>
+                <div class="pb-field"><label for="addr-{{ address.id }}-company">Company</label><input type="text" id="addr-{{ address.id }}-company" name="address[company]" value="{{ address.company }}"></div>
+                <div class="pb-field"><label for="addr-{{ address.id }}-1">Address</label><input type="text" id="addr-{{ address.id }}-1" name="address[address1]" value="{{ address.address1 }}"></div>
+                <div class="pb-field"><label for="addr-{{ address.id }}-2">Apartment, suite, etc.</label><input type="text" id="addr-{{ address.id }}-2" name="address[address2]" value="{{ address.address2 }}"></div>
+                <div class="pb-field"><label for="addr-{{ address.id }}-city">City</label><input type="text" id="addr-{{ address.id }}-city" name="address[city]" value="{{ address.city }}"></div>
+                <div class="pb-field"><label for="addr-{{ address.id }}-country">Country / region</label><select id="addr-{{ address.id }}-country" name="address[country]" data-pb-country data-default="{{ address.country }}">{{ country_option_tags }}</select></div>
+                <div class="pb-field" data-pb-province-wrap><label for="addr-{{ address.id }}-province">Province / state</label><select id="addr-{{ address.id }}-province" name="address[province]" data-pb-province data-default="{{ address.province }}"></select></div>
+                <div class="pb-field"><label for="addr-{{ address.id }}-zip">Postal / ZIP code</label><input type="text" id="addr-{{ address.id }}-zip" name="address[zip]" value="{{ address.zip }}"></div>
+                <div class="pb-field"><label for="addr-{{ address.id }}-phone">Phone</label><input type="tel" id="addr-{{ address.id }}-phone" name="address[phone]" value="{{ address.phone }}"></div>
+                <label style="display:flex;gap:.6rem;align-items:center;font-size:.86rem;margin-bottom:1rem;"><input type="checkbox" name="address[default]" value="true" {% if address == customer.default_address %}checked{% endif %} style="width:auto;min-height:auto;"> Set as default</label>
+                <div class="pb-actions"><button type="submit" class="pb-btn pb-btn--gold">Update</button><button type="button" class="pb-btn pb-btn--ghost" data-pb-addr-edit-toggle="{{ address.id }}">Cancel</button></div>
+              {%- endform -%}
+            </div>
+          </div>
+        {%- endfor -%}
+      </div>
+    {%- else -%}
+      <p class="pb-lead">You have no saved addresses yet.</p>
+    {%- endif -%}
+  </div>
+</section>
+
+<script>
+(function(){
+  var root=document.querySelector('[data-pb-addresses]');if(!root)return;
+
+  /* Province dependent on country (reads data-provinces from country_option_tags) */
+  function initCountry(sel){
+    var wrap=sel.closest('.pb-aside-card')||root;
+    var provSel=wrap.querySelector('[data-pb-province]');
+    var provWrap=wrap.querySelector('[data-pb-province-wrap]');
+    if(!provSel)return;
+    function fill(){
+      var opt=sel.options[sel.selectedIndex];
+      var provinces=[];try{provinces=JSON.parse(opt.getAttribute('data-provinces')||'[]');}catch(e){}
+      provSel.innerHTML='';
+      if(!provinces.length){provWrap.style.display='none';return;}
+      provWrap.style.display='';
+      var def=provSel.getAttribute('data-default')||'';
+      provinces.forEach(function(p){var o=document.createElement('option');o.value=p[1];o.textContent=p[1];if(p[1]===def)o.selected=true;provSel.appendChild(o);});
+    }
+    var def=sel.getAttribute('data-default');if(def){for(var i=0;i<sel.options.length;i++){if(sel.options[i].value===def){sel.selectedIndex=i;break;}}}
+    fill();sel.addEventListener('change',fill);
+  }
+  root.querySelectorAll('[data-pb-country]').forEach(initCountry);
+
+  /* Toggles */
+  root.querySelectorAll('[data-pb-addr-new-toggle]').forEach(function(b){b.addEventListener('click',function(){var p=root.querySelector('[data-pb-addr-new]');p.hidden=!p.hidden;if(!p.hidden)p.scrollIntoView({behavior:'smooth',block:'center'});});});
+  root.querySelectorAll('[data-pb-addr-edit-toggle]').forEach(function(b){b.addEventListener('click',function(){var id=b.getAttribute('data-pb-addr-edit-toggle');var p=root.querySelector('[data-pb-addr-edit="'+id+'"]');p.hidden=!p.hidden;});});
+
+  /* Delete via native DELETE */
+  root.querySelectorAll('[data-pb-addr-delete]').forEach(function(b){b.addEventListener('click',function(){
+    if(!window.confirm('Delete this address?'))return;
+    var f=document.createElement('form');f.method='post';f.action=b.getAttribute('data-url');
+    var m=document.createElement('input');m.type='hidden';m.name='_method';m.value='delete';f.appendChild(m);
+    document.body.appendChild(f);f.submit();
+  });});
+})();
+</script>
+
+{% schema %}
+{
+  "name": "PB · Addresses",
+  "tag": "section",
+  "settings": [
+    { "type": "color", "id": "bg", "label": "Background", "default": "#F5F1E8" }
+  ],
+  "presets": [ { "name": "PB · Addresses" } ]
+}
+{% endschema %}

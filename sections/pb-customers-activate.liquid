@@ -1,0 +1,33 @@
+{%- comment -%} Punjab Bolda · Activate Account — native activate_customer_password {%- endcomment -%}
+{%- liquid assign s = section.settings -%}
+<section class="pb pb-auth" style="background:{{ s.bg }};">
+  <div class="pb-wrap" style="display:grid;place-items:center;">
+    <div class="pb-auth__card">
+      <div class="pb-auth__head">
+        <h1 class="pb-auth__title">{{ s.heading | default: 'Activate your account' }}</h1>
+        <p class="pb-auth__sub">{{ s.subheading | default: 'Create a password to activate your account.' }}</p>
+      </div>
+      {%- form 'activate_customer_password' -%}
+        {%- if form.errors -%}<div class="pb-auth__errors" role="alert">{{ form.errors | default_errors }}</div>{%- endif -%}
+        <div class="pb-field"><label for="pb-act-pass">Password</label><input type="password" id="pb-act-pass" name="customer[password]" autocomplete="new-password" required></div>
+        <div class="pb-field"><label for="pb-act-confirm">Confirm password</label><input type="password" id="pb-act-confirm" name="customer[password_confirmation]" autocomplete="new-password" required></div>
+        <button type="submit" class="pb-btn pb-auth__btn">{{ s.btn_label | default: 'Activate account' }}</button>
+        <p class="pb-auth__alt"><button type="submit" name="decline" class="pb-auth__link">Decline invitation</button></p>
+      {%- endform -%}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "PB · Activate Account",
+  "tag": "section",
+  "settings": [
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Activate your account" },
+    { "type": "text", "id": "subheading", "label": "Subheading", "default": "Create a password to activate your account." },
+    { "type": "text", "id": "btn_label", "label": "Button", "default": "Activate account" },
+    { "type": "color", "id": "bg", "label": "Background", "default": "#EEE1D3" }
+  ],
+  "presets": [ { "name": "PB · Activate Account" } ]
+}
+{% endschema %}

@@ -1,0 +1,40 @@
+{
+  "type": "footer",
+  "name": "Footer group",
+  "sections": {
+    "pb_newsletter": {
+      "type": "pb-newsletter",
+      "settings": {
+        "heading": "Join the movement.",
+        "subheading": "Get early access to new drops, exclusive releases and stories from the culture."
+      }
+    },
+    "pb_footer": {
+      "type": "pb-footer",
+      "settings": {
+        "brand": "Punjab Bolda",
+        "tagline": "Rooted in culture. Driven by pride.",
+        "show_social": true,
+        "bg": "#111111",
+        "fg": "#F5F1E8"
+      },
+      "blocks": {
+        "shop": { "type": "menu", "settings": { "title": "Shop" } },
+        "collections": { "type": "menu", "settings": { "title": "Collections" } },
+        "about": { "type": "menu", "settings": { "title": "About" } },
+        "help": { "type": "menu", "settings": { "title": "Help" } }
+      },
+      "block_order": ["shop", "collections", "about", "help"]
+    },
+    "pb_cart_drawer": {
+      "type": "pb-cart-drawer",
+      "settings": {
+        "heading": "Your bag",
+        "open_on_add": true,
+        "show_free_ship": true,
+        "free_ship_threshold": 120
+      }
+    }
+  },
+  "order": ["pb_newsletter", "pb_footer", "pb_cart_drawer"]
+}

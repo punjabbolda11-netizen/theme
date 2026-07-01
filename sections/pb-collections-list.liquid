@@ -1,0 +1,71 @@
+{%- comment -%} Punjab Bolda · All Collections page {%- endcomment -%}
+
+<section class="pb-section pb-cl" id="pb-cl-{{ section.id }}">
+  <div class="pb-wrap">
+
+    {%- if section.settings.heading != blank -%}
+      <div class="pb-cl__head pb-reveal">
+        {%- if section.settings.eyebrow != blank -%}
+          <p class="pb-eyebrow">{{ section.settings.eyebrow }}</p>
+        {%- endif -%}
+        <h1 class="pb-h2">{{ section.settings.heading }}</h1>
+        {%- if section.settings.subheading != blank -%}
+          <p class="pb-lead">{{ section.settings.subheading }}</p>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+
+    {%- if collections.size > 0 -%}
+      <div class="pb-cl__grid">
+        {%- for collection in collections -%}
+          <a class="pb-cl__card pb-reveal" href="{{ collection.url }}"
+             style="--i:{{ forloop.index0 | modulo: 4 }}">
+            <div class="pb-cl__media pb-media">
+              {%- if collection.image -%}
+                <img class="pb-zoom"
+                     src="{{ collection.image | image_url: width: 800 }}"
+                     alt="{{ collection.image.alt | default: collection.title | escape }}"
+                     width="800" height="600" loading="lazy">
+              {%- else -%}
+                {{ 'collection-1' | placeholder_svg_tag: 'pb-cl__placeholder' }}
+              {%- endif -%}
+            </div>
+            <div class="pb-cl__info">
+              <h2 class="pb-cl__title">{{ collection.title }}</h2>
+              <span class="pb-cl__count">{{ collection.products_count }} pieces</span>
+            </div>
+          </a>
+        {%- endfor -%}
+      </div>
+    {%- else -%}
+      <p style="text-align:center;opacity:.6;padding:4rem 0;">No collections yet — check back soon.</p>
+    {%- endif -%}
+
+  </div>
+</section>
+
+{% stylesheet %}
+.pb-cl__head{text-align:center;max-width:620px;margin:0 auto 3.5rem;}
+.pb-cl__grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1.25rem;}
+@media(min-width:600px){.pb-cl__grid{grid-template-columns:repeat(3,1fr);}}
+@media(min-width:900px){.pb-cl__grid{grid-template-columns:repeat(4,1fr);}}
+.pb-cl__card{display:block;text-decoration:none;color:var(--pb-text);}
+.pb-cl__card[style]{transition-delay:calc(var(--i)*60ms);}
+.pb-cl__media{aspect-ratio:3/4;border-radius:8px;overflow:hidden;background:var(--pb-bg-secondary);margin-bottom:.75rem;}
+.pb-cl__placeholder{width:100%;height:100%;display:block;opacity:.25;}
+.pb-cl__title{font-family:var(--pb-heading);font-size:1rem;font-weight:600;margin:0 0 .2rem;letter-spacing:.02em;}
+.pb-cl__count{font-size:.75rem;opacity:.5;letter-spacing:.06em;}
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "PB · Collections List",
+  "tag": "section",
+  "settings": [
+    {"type":"text","id":"eyebrow","label":"Eyebrow","default":"Punjab Bolda"},
+    {"type":"text","id":"heading","label":"Heading","default":"All Collections"},
+    {"type":"text","id":"subheading","label":"Subheading","default":"Every drop, every culture, every piece."}
+  ],
+  "enabled_on": {"templates": ["list-collections"]}
+}
+{% endschema %}

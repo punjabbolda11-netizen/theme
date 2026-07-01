@@ -1,0 +1,321 @@
+{%- comment -%}
+  Punjab Bolda · Luxury Header
+  Visually upgrades the storefront while using ONLY native Shopify functionality:
+   · Search        → native predictive search (/search/suggest.json) + native /search results
+   · Cart          → native cart route ({{ routes.cart_url }}) with live AJAX count bubble
+   · Navigation    → native link lists ({{ linklists }})
+   · Accounts      → native customer routes
+  Place inside the Header section group (Theme editor → Header). Safe to use alongside
+  the announcement bar; designed to sit directly below it.
+{%- endcomment -%}
+{%- liquid
+  assign s = section.settings
+  assign menu = linklists[s.menu]
+  assign overlay = false
+  if s.transparent and template == 'index'
+    assign overlay = true
+  endif
+-%}
+<header class="pb pb-header{% if overlay %} pb-header--can-overlay{% endif %}" data-pb-header
+        style="--pb-h-bg:{{ s.bg }};--pb-h-fg:{{ s.fg }};--pb-h-accent:{{ s.accent }};">
+  <a class="pb-skip-link" href="#MainContent">Skip to content</a>
+  <div class="pb-header__bar pb-wrap">
+
+    {%- comment -%} Left: mobile menu toggle + desktop nav {%- endcomment -%}
+    <div class="pb-header__left">
+      <button type="button" class="pb-header__icon pb-header__burger" data-pb-drawer-open aria-label="Open menu" aria-expanded="false" aria-controls="pb-drawer">
+        {% render 'pb-icon', icon: 'menu' %}
+      </button>
+      <nav class="pb-header__nav" aria-label="Primary">
+        <ul>
+          {%- for link in menu.links -%}
+            <li class="pb-header__navitem{% if link.links != blank %} has-children{% endif %}">
+              <a href="{{ link.url }}" {% if link.active or link.child_active %}aria-current="page"{% endif %}>{{ link.title }}</a>
+              {%- if link.links != blank -%}
+                <div class="pb-header__mega">
+                  <ul>
+                    {%- for child in link.links -%}
+                      <li><a href="{{ child.url }}">{{ child.title }}</a></li>
+                    {%- endfor -%}
+                  </ul>
+                </div>
+              {%- endif -%}
+            </li>
+          {%- endfor -%}
+        </ul>
+      </nav>
+    </div>
+
+    {%- comment -%} Center: logo {%- endcomment -%}
+    <div class="pb-header__logo">
+      <a href="{{ routes.root_url }}" aria-label="{{ shop.name | escape }} — home">
+        {%- if s.logo != blank -%}
+          <img src="{{ s.logo | image_url: width: 400 }}" width="{{ s.logo_width }}"
+               height="auto" alt="{{ shop.name | escape }}"
+               style="width:{{ s.logo_width }}px" {% if overlay %}data-pb-logo data-pb-logo-light="{{ s.logo_light | image_url: width: 400 }}" data-pb-logo-dark="{{ s.logo | image_url: width: 400 }}"{% endif %}>
+        {%- else -%}
+          <span class="pb-header__wordmark">{{ s.brand | default: shop.name }}</span>
+        {%- endif -%}
+      </a>
+    </div>
+
+    {%- comment -%} Right: search + account + cart {%- endcomment -%}
+    <div class="pb-header__right">
+      {%- if s.show_search -%}
+        <button type="button" class="pb-header__icon" data-pb-search-open aria-label="Search" aria-expanded="false" aria-controls="pb-search">
+          {% render 'pb-icon', icon: 'search' %}
+        </button>
+      {%- endif -%}
+      {%- if shop.customer_accounts_enabled and s.show_account -%}
+        <a class="pb-header__icon pb-header__acct" href="{% if customer %}{{ routes.account_url }}{% else %}{{ routes.account_login_url }}{% endif %}" aria-label="Account">
+          {% render 'pb-icon', icon: 'user' %}
+        </a>
+      {%- endif -%}
+      <a class="pb-header__icon pb-header__cart" href="{{ routes.cart_url }}" aria-label="Cart">
+        {% render 'pb-icon', icon: 'bag' %}
+        <span class="pb-header__count{% if cart.item_count == 0 %} is-empty{% endif %}" data-pb-cart-count aria-hidden="true">{{ cart.item_count }}</span>
+        <span class="pb-visually-hidden" data-pb-cart-count-a11y>{{ cart.item_count }} items in cart</span>
+      </a>
+    </div>
+  </div>
+
+  {%- comment -%} ---- Predictive search panel (native /search/suggest.json) ---- {%- endcomment -%}
+  {%- if s.show_search -%}
+    <div class="pb-search" id="pb-search" data-pb-search hidden>
+      <div class="pb-wrap pb-search__inner">
+        <form action="{{ routes.search_url }}" method="get" role="search" class="pb-search__form">
+          <input type="search" name="q" placeholder="Search streetwear, caps, collections…" autocomplete="off"
+                 aria-label="Search" class="pb-search__input" data-pb-search-input>
+          <input type="hidden" name="options[prefix]" value="last">
+          <button type="submit" class="pb-search__submit" aria-label="Search">{% render 'pb-icon', icon: 'search' %}</button>
+          <button type="button" class="pb-search__close" data-pb-search-close aria-label="Close search">{% render 'pb-icon', icon: 'close' %}</button>
+        </form>
+        <div class="pb-search__results" data-pb-search-results aria-live="polite"></div>
+      </div>
+    </div>
+  {%- endif -%}
+</header>
+
+{%- comment -%} ---- Mobile navigation drawer ---- {%- endcomment -%}
+<div class="pb pb-drawer" id="pb-drawer" data-pb-drawer hidden>
+  <div class="pb-drawer__overlay" data-pb-drawer-close></div>
+  <aside class="pb-drawer__panel" role="dialog" aria-modal="true" aria-label="Menu" style="--pb-h-bg:{{ s.bg }};--pb-h-fg:{{ s.fg }};--pb-h-accent:{{ s.accent }};">
+    <div class="pb-drawer__head">
+      <span class="pb-drawer__brand">{{ s.brand | default: shop.name }}</span>
+      <button type="button" class="pb-header__icon" data-pb-drawer-close aria-label="Close menu">{% render 'pb-icon', icon: 'close' %}</button>
+    </div>
+    <nav class="pb-drawer__nav" aria-label="Mobile">
+      <ul>
+        {%- for link in menu.links -%}
+          <li>
+            {%- if link.links != blank -%}
+              <details>
+                <summary>{{ link.title }} {% render 'pb-icon', icon: 'chevron' %}</summary>
+                <ul class="pb-drawer__sub">
+                  <li><a href="{{ link.url }}">All {{ link.title }}</a></li>
+                  {%- for child in link.links -%}<li><a href="{{ child.url }}">{{ child.title }}</a></li>{%- endfor -%}
+                </ul>
+              </details>
+            {%- else -%}
+              <a href="{{ link.url }}">{{ link.title }}</a>
+            {%- endif -%}
+          </li>
+        {%- endfor -%}
+      </ul>
+    </nav>
+    <div class="pb-drawer__foot">
+      {%- if shop.customer_accounts_enabled -%}
+        <a class="pb-drawer__acct" href="{% if customer %}{{ routes.account_url }}{% else %}{{ routes.account_login_url }}{% endif %}">{% render 'pb-icon', icon: 'user' %} {% if customer %}My account{% else %}Sign in{% endif %}</a>
+      {%- endif -%}
+      {%- if s.drawer_note != blank -%}<p class="pb-drawer__note">{{ s.drawer_note }}</p>{%- endif -%}
+    </div>
+  </aside>
+</div>
+
+<script>
+(function(){
+  var header=document.querySelector('[data-pb-header]');
+  if(!header)return;
+  var root=document.documentElement;
+
+  /* Measure height → CSS var (used for overlay tuck + spacing) */
+  function setH(){root.style.setProperty('--pb-header-h',header.offsetHeight+'px');}
+  setH();window.addEventListener('resize',setH);
+
+  /* Shrink-on-scroll + transparent overlay over hero */
+  var canOverlay=header.classList.contains('pb-header--can-overlay');
+  var hero=document.querySelector('.pb-hero');
+  if(canOverlay&&hero){document.body.classList.add('pb-overlay');header.classList.add('is-overlay');}
+  function onScroll(){
+    var y=window.pageYOffset;
+    header.classList.toggle('is-pinned',y>10);
+    if(canOverlay&&hero){
+      var past=y>(hero.offsetHeight-header.offsetHeight-40);
+      header.classList.toggle('is-overlay',!past);
+      swapLogo(!past);
+    }
+  }
+  function swapLogo(light){
+    var img=header.querySelector('[data-pb-logo]');
+    if(!img)return;
+    var src=light?img.getAttribute('data-pb-logo-light'):img.getAttribute('data-pb-logo-dark');
+    if(src&&img.getAttribute('src')!==src)img.setAttribute('src',src);
+  }
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+
+  /* ---- Drawer ---- */
+  var drawer=document.getElementById('pb-drawer');
+  function openDrawer(){drawer.hidden=false;requestAnimationFrame(function(){drawer.classList.add('is-open');});document.body.style.overflow='hidden';header.querySelector('[data-pb-drawer-open]').setAttribute('aria-expanded','true');var f=drawer.querySelector('a,button');f&&f.focus();}
+  function closeDrawer(){drawer.classList.remove('is-open');document.body.style.overflow='';header.querySelector('[data-pb-drawer-open]').setAttribute('aria-expanded','false');setTimeout(function(){drawer.hidden=true;},400);}
+  header.querySelectorAll('[data-pb-drawer-open]').forEach(function(b){b.addEventListener('click',openDrawer);});
+  drawer.querySelectorAll('[data-pb-drawer-close]').forEach(function(b){b.addEventListener('click',closeDrawer);});
+
+  /* ---- Search ---- */
+  var search=document.getElementById('pb-search');
+  if(search){
+    var input=search.querySelector('[data-pb-search-input]');
+    var results=search.querySelector('[data-pb-search-results]');
+    function openSearch(){search.hidden=false;requestAnimationFrame(function(){search.classList.add('is-open');});document.body.style.overflow='hidden';header.querySelector('[data-pb-search-open]').setAttribute('aria-expanded','true');input.focus();}
+    function closeSearch(){search.classList.remove('is-open');document.body.style.overflow='';header.querySelector('[data-pb-search-open]').setAttribute('aria-expanded','false');setTimeout(function(){search.hidden=true;},350);}
+    header.querySelector('[data-pb-search-open]').addEventListener('click',openSearch);
+    search.querySelector('[data-pb-search-close]').addEventListener('click',closeSearch);
+    var t;
+    input.addEventListener('input',function(){
+      clearTimeout(t);var q=input.value.trim();
+      if(q.length<2){results.innerHTML='';return;}
+      t=setTimeout(function(){
+        fetch('/search/suggest.json?q='+encodeURIComponent(q)+'&resources[type]=product,collection&resources[limit]=6&resources[options][unavailable_products]=last')
+          .then(function(r){return r.json();})
+          .then(function(data){
+            var p=(data.resources.results.products||[]),c=(data.resources.results.collections||[]);
+            var html='';
+            if(c.length){html+='<p class="pb-search__cat">Collections</p>';c.forEach(function(x){html+='<a class="pb-search__row" href="'+x.url+'"><span>'+x.title+'</span></a>';});}
+            if(p.length){html+='<p class="pb-search__cat">Products</p>';p.forEach(function(x){
+              var img=x.featured_image&&x.featured_image.url?'<img src="'+x.featured_image.url+'&width=120" alt="" width="46" height="58" loading="lazy">':'';
+              html+='<a class="pb-search__row pb-search__row--p" href="'+x.url+'">'+img+'<span class="pb-search__rt">'+x.title+'</span><span class="pb-search__rp">'+(x.price?x.price:'')+'</span></a>';});}
+            if(!p.length&&!c.length)html='<p class="pb-search__empty">No matches for “'+q.replace(/</g,'')+'”. Press enter to search everything.</p>';
+            results.innerHTML=html;
+          }).catch(function(){});
+      },220);
+    });
+    document.addEventListener('keydown',function(e){if(e.key==='Escape'&&search.classList.contains('is-open'))closeSearch();});
+  }
+
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&drawer.classList.contains('is-open'))closeDrawer();});
+
+  /* ---- Live cart count (native /cart.js) ---- */
+  function refreshCount(){
+    fetch('/cart.js').then(function(r){return r.json();}).then(function(cart){
+      header.querySelectorAll('[data-pb-cart-count]').forEach(function(el){el.textContent=cart.item_count;el.classList.toggle('is-empty',cart.item_count===0);});
+      var a=header.querySelector('[data-pb-cart-count-a11y]');if(a)a.textContent=cart.item_count+' items in cart';
+    }).catch(function(){});
+  }
+  document.addEventListener('pb:cart:updated',refreshCount);
+  document.addEventListener('cart:refresh',refreshCount);
+})();
+</script>
+
+{% stylesheet %}
+.pb-visually-hidden{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
+.pb-header{position:sticky;top:0;z-index:50;background:var(--pb-h-bg,#F5F1E8);color:var(--pb-h-fg,#111);border-bottom:1px solid transparent;transition:background .4s var(--pb-ease),color .4s var(--pb-ease),box-shadow .4s var(--pb-ease),border-color .4s var(--pb-ease);}
+.pb-header.is-pinned{box-shadow:0 6px 26px -20px rgba(0,0,0,.5);border-bottom-color:var(--pb-line);}
+.pb-header__bar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:1rem;min-height:64px;padding-block:.5rem;transition:min-height .4s var(--pb-ease);}
+.pb-header.is-pinned .pb-header__bar{min-height:58px;}
+.pb-header__left{display:flex;align-items:center;gap:1.4rem;justify-self:start;}
+.pb-header__right{display:flex;align-items:center;gap:.4rem;justify-self:end;}
+.pb-header__logo{justify-self:center;text-align:center;}
+.pb-header__logo a{display:inline-flex;align-items:center;color:inherit;text-decoration:none;}
+.pb-header__wordmark{font-family:var(--pb-font-heading);font-size:clamp(1.25rem,3.5vw,1.7rem);font-weight:700;letter-spacing:.04em;text-transform:uppercase;}
+.pb-header__icon{display:grid;place-items:center;width:44px;height:44px;background:transparent;border:0;color:inherit;cursor:pointer;border-radius:50%;position:relative;text-decoration:none;transition:background .25s var(--pb-ease);-webkit-tap-highlight-color:transparent;}
+.pb-header__icon:hover{background:rgba(17,17,17,.06);}
+.pb-header.is-overlay .pb-header__icon:hover{background:rgba(255,255,255,.14);}
+.pb-header__count{position:absolute;top:6px;right:5px;min-width:17px;height:17px;padding:0 4px;display:grid;place-items:center;background:var(--pb-h-accent,#D4AF37);color:#1a1407;font-size:.6rem;font-weight:700;border-radius:9px;line-height:1;}
+.pb-header__count.is-empty{display:none;}
+/* Desktop nav */
+.pb-header__nav{display:none;}
+.pb-header__nav ul{list-style:none;display:flex;gap:1.8rem;margin:0;padding:0;}
+.pb-header__navitem>a{color:inherit;text-decoration:none;font-size:.74rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;padding:.6rem 0;display:inline-block;position:relative;}
+.pb-header__navitem>a::after{content:"";position:absolute;left:0;bottom:.3rem;width:0;height:1px;background:var(--pb-h-accent,#D4AF37);transition:width .35s var(--pb-ease);}
+.pb-header__navitem>a:hover::after,.pb-header__navitem>a[aria-current]::after{width:100%;}
+.pb-header__mega{position:absolute;left:0;right:0;top:100%;background:var(--pb-h-bg,#F5F1E8);box-shadow:var(--pb-shadow);opacity:0;visibility:hidden;transform:translateY(8px);transition:all .3s var(--pb-ease);padding:1.5rem var(--pb-pad-x);border-top:1px solid var(--pb-line);}
+.pb-header__navitem.has-children:hover .pb-header__mega{opacity:1;visibility:visible;transform:none;}
+.pb-header__mega ul{display:flex;flex-wrap:wrap;gap:.6rem 2rem;max-width:var(--pb-maxw);margin-inline:auto;}
+.pb-header__mega a{font-size:.8rem;letter-spacing:.04em;text-transform:none;font-weight:500;color:var(--pb-muted);}
+.pb-header__mega a:hover{color:var(--pb-h-fg);}
+.pb-header__burger{display:inline-grid;}
+.pb-header__acct{display:none;}
+/* Overlay (transparent over hero) */
+body.pb-overlay .pb-hero{margin-top:calc(var(--pb-header-h,64px) * -1);}
+.pb-header.is-overlay{background:transparent;color:#fff;border-bottom-color:transparent;box-shadow:none;}
+.pb-header.is-overlay .pb-header__count{background:var(--pb-h-accent,#D4AF37);}
+@media(min-width:990px){
+  .pb-header__burger{display:none;}
+  .pb-header__nav{display:block;}
+  .pb-header__acct{display:inline-grid;}
+}
+/* ---- Search panel ---- */
+.pb-search{position:fixed;inset:0;z-index:70;background:rgba(17,17,17,.4);backdrop-filter:saturate(120%) blur(2px);opacity:0;transition:opacity .3s var(--pb-ease);}
+.pb-search.is-open{opacity:1;}
+.pb-search__inner{background:var(--pb-h-bg,#F5F1E8);padding:1.2rem var(--pb-pad-x) 2rem;transform:translateY(-16px);transition:transform .35s var(--pb-ease);max-height:88vh;overflow:auto;}
+.pb-search.is-open .pb-search__inner{transform:none;}
+.pb-search__form{display:flex;align-items:center;gap:.6rem;border-bottom:2px solid var(--pb-h-fg);padding-bottom:.7rem;max-width:var(--pb-maxw);margin-inline:auto;}
+.pb-search__input{flex:1;border:0;background:transparent;font-family:var(--pb-font-heading);font-size:clamp(1.3rem,4vw,2rem);color:var(--pb-h-fg);outline:none;min-width:0;}
+.pb-search__submit,.pb-search__close{background:transparent;border:0;color:var(--pb-h-fg);cursor:pointer;padding:.4rem;display:grid;place-items:center;}
+.pb-search__results{max-width:var(--pb-maxw);margin:1.2rem auto 0;}
+.pb-search__cat{font-size:.66rem;letter-spacing:.2em;text-transform:uppercase;color:var(--pb-h-accent,#D4AF37);font-weight:700;margin:1rem 0 .5rem;}
+.pb-search__row{display:flex;align-items:center;gap:.9rem;padding:.65rem 0;color:var(--pb-h-fg);text-decoration:none;border-bottom:1px solid var(--pb-line);}
+.pb-search__row:hover{color:var(--pb-h-accent);}
+.pb-search__row img{border-radius:3px;object-fit:cover;}
+.pb-search__rt{flex:1;font-size:.95rem;}
+.pb-search__rp{font-size:.85rem;color:var(--pb-muted);}
+.pb-search__empty{color:var(--pb-muted);font-size:.95rem;padding:1rem 0;}
+/* ---- Drawer ---- */
+.pb-drawer{position:fixed;inset:0;z-index:80;}
+.pb-drawer__overlay{position:absolute;inset:0;background:rgba(17,17,17,.5);opacity:0;transition:opacity .35s var(--pb-ease);}
+.pb-drawer.is-open .pb-drawer__overlay{opacity:1;}
+.pb-drawer__panel{position:absolute;top:0;left:0;height:100%;width:min(86vw,380px);background:var(--pb-h-bg,#F5F1E8);color:var(--pb-h-fg);display:flex;flex-direction:column;transform:translateX(-100%);transition:transform .4s var(--pb-ease);overflow-y:auto;}
+.pb-drawer.is-open .pb-drawer__panel{transform:none;}
+.pb-drawer__head{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.2rem;border-bottom:1px solid var(--pb-line);}
+.pb-drawer__brand{font-family:var(--pb-font-heading);font-weight:700;text-transform:uppercase;letter-spacing:.04em;}
+.pb-drawer__nav{padding:.5rem 0;flex:1;}
+.pb-drawer__nav>ul{list-style:none;margin:0;padding:0;}
+.pb-drawer__nav>ul>li{border-bottom:1px solid var(--pb-line);}
+.pb-drawer__nav a,.pb-drawer__nav summary{display:flex;align-items:center;justify-content:space-between;padding:1.05rem 1.2rem;color:inherit;text-decoration:none;font-family:var(--pb-font-heading);font-size:1.1rem;font-weight:600;cursor:pointer;list-style:none;}
+.pb-drawer__nav summary::-webkit-details-marker{display:none;}
+.pb-drawer__nav details[open] summary svg{transform:rotate(180deg);}
+.pb-drawer__nav summary svg{transition:transform .3s var(--pb-ease);}
+.pb-drawer__sub{list-style:none;margin:0;padding:0 0 .6rem;}
+.pb-drawer__sub a{font-family:var(--pb-font-body);font-size:.92rem;font-weight:500;color:var(--pb-muted);padding:.55rem 1.2rem .55rem 1.8rem;}
+.pb-drawer__foot{padding:1.2rem;border-top:1px solid var(--pb-line);}
+.pb-drawer__acct{display:inline-flex;align-items:center;gap:.6rem;font-size:.85rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:inherit;text-decoration:none;}
+.pb-drawer__note{margin:.9rem 0 0;font-size:.74rem;color:var(--pb-muted);}
+@media(prefers-reduced-motion:reduce){.pb-drawer__panel,.pb-search__inner,.pb-header{transition:none!important;}}
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "PB · Header",
+  "tag": "header",
+  "class": "pb-header-section",
+  "settings": [
+    { "type": "header", "content": "Branding" },
+    { "type": "image_picker", "id": "logo", "label": "Logo (dark — for solid header)" },
+    { "type": "image_picker", "id": "logo_light", "label": "Logo (light — for transparent state)" },
+    { "type": "range", "id": "logo_width", "min": 80, "max": 280, "step": 5, "unit": "px", "label": "Logo width", "default": 150 },
+    { "type": "text", "id": "brand", "label": "Brand text (if no logo)", "default": "PUNJAB BOLDA" },
+    { "type": "header", "content": "Navigation" },
+    { "type": "link_list", "id": "menu", "label": "Menu", "default": "main-menu" },
+    { "type": "text", "id": "drawer_note", "label": "Mobile drawer note", "default": "Free shipping over $120 · Ships worldwide" },
+    { "type": "header", "content": "Features (all native Shopify)" },
+    { "type": "checkbox", "id": "show_search", "label": "Show predictive search", "default": true },
+    { "type": "checkbox", "id": "show_account", "label": "Show account icon", "default": true },
+    { "type": "header", "content": "Appearance" },
+    { "type": "checkbox", "id": "transparent", "label": "Transparent over hero (homepage)", "default": true },
+    { "type": "color", "id": "bg", "label": "Background", "default": "#F5F1E8" },
+    { "type": "color", "id": "fg", "label": "Text / icons", "default": "#111111" },
+    { "type": "color", "id": "accent", "label": "Accent (cart badge, underline)", "default": "#D4AF37" }
+  ],
+  "enabled_on": { "groups": ["header"] },
+  "presets": [ { "name": "PB · Header" } ]
+}
+{% endschema %}

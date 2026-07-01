@@ -1,0 +1,365 @@
+{%- comment -%}
+  Punjab Bolda · Main Product
+  100% native commerce: {% form 'product' %}, native variants, native quantity,
+  native dynamic checkout ({{ form | payment_button }}) and native cart.
+  AJAX add is progressive enhancement; the form works without JS.
+{%- endcomment -%}
+{%- liquid
+  assign s = section.settings
+  assign p = product
+  assign v = p.selected_or_first_available_variant
+  assign on_sale = false
+  if v.compare_at_price > v.price
+    assign on_sale = true
+  endif
+-%}
+<section class="pb pb-section pb-pdp" style="background:{{ s.bg }};" data-pb-pdp data-product-id="{{ p.id }}">
+  <div class="pb-wrap pb-pdp__grid">
+
+    {%- comment -%} ---------- Media gallery ---------- {%- endcomment -%}
+    <div class="pb-pdp__media">
+      {%- if s.show_breadcrumb -%}<div class="pb-pdp__crumbs pb-pdp__crumbs--m">{% render 'pb-breadcrumbs' %}</div>{%- endif -%}
+      <div class="pb-pdp__stage" data-pb-stage>
+        {%- for media in p.media -%}
+          <div class="pb-pdp__slide{% if media.id == v.featured_media.id %} is-active{% endif %}" data-media-id="{{ media.id }}">
+            {%- if media.media_type == 'image' -%}
+              <img src="{{ media | image_url: width: 1200 }}"
+                   srcset="{{ media | image_url: width: 600 }} 600w, {{ media | image_url: width: 1200 }} 1200w, {{ media | image_url: width: 1600 }} 1600w, {{ media | image_url: width: 2048 }} 2048w"
+                   sizes="(min-width:990px) 700px, 100vw" width="{{ media.width }}" height="{{ media.height }}"
+                   alt="{{ media.alt | escape | default: p.title | escape }}" {% if media.id == v.featured_media.id %}fetchpriority="high"{% else %}loading="lazy"{% endif %}>
+            {%- else -%}
+              {{ media | media_tag }}
+            {%- endif -%}
+          </div>
+        {%- else -%}
+          <div class="pb-pdp__slide is-active">{{ 'product-1' | placeholder_svg_tag: 'pb-pdp__ph' }}</div>
+        {%- endfor -%}
+      </div>
+      {%- if p.media.size > 1 -%}
+        <div class="pb-pdp__thumbs" data-pb-thumbs role="list">
+          {%- for media in p.media -%}
+            <button type="button" class="pb-pdp__thumb{% if media.id == v.featured_media.id %} is-active{% endif %}" data-media-target="{{ media.id }}" aria-label="View image {{ forloop.index }}">
+              <img src="{{ media | image_url: width: 160 }}" width="80" height="100" alt="" loading="lazy">
+            </button>
+          {%- endfor -%}
+        </div>
+      {%- endif -%}
+    </div>
+
+    {%- comment -%} ---------- Product info ---------- {%- endcomment -%}
+    <div class="pb-pdp__info">
+      {%- if s.show_breadcrumb -%}<div class="pb-pdp__crumbs pb-pdp__crumbs--d">{% render 'pb-breadcrumbs' %}</div>{%- endif -%}
+
+      {%- if p.vendor != blank and s.show_vendor -%}<p class="pb-pdp__vendor">{{ p.vendor }}</p>{%- endif -%}
+      <h1 class="pb-pdp__title">{{ p.title }}</h1>
+
+      {%- if p.metafields.reviews.rating.value != blank and s.show_rating -%}
+        <div class="pb-pdp__rating">
+          <span class="pb-pdp__stars" aria-hidden="true">{% for i in (1..5) %}{% render 'pb-icon', icon: 'star' %}{% endfor %}</span>
+          <span class="pb-pdp__rcount">{{ p.metafields.reviews.rating.value }} · {{ p.metafields.reviews.rating_count | default: 0 }} reviews</span>
+        </div>
+      {%- endif -%}
+
+      <div class="pb-pdp__price" data-pb-price>
+        {%- if on_sale -%}<s data-pb-compare>{{ v.compare_at_price | money }}</s>{%- endif -%}
+        <span data-pb-current class="{% if on_sale %}is-sale{% endif %}">{{ v.price | money }}</span>
+        {%- if on_sale -%}<span class="pb-pdp__save" data-pb-save>Save {{ v.compare_at_price | minus: v.price | money }}</span>{%- endif -%}
+      </div>
+
+      {%- if s.show_taxline -%}<p class="pb-pdp__taxline">Taxes included. Shipping calculated at checkout.</p>{%- endif -%}
+
+      {%- comment -%} ----- Native product form ----- {%- endcomment -%}
+      {%- form 'product', p, id: 'pb-product-form', class: 'pb-pdp__form', novalidate: 'novalidate' -%}
+        <input type="hidden" name="id" value="{{ v.id }}" data-pb-variant-id>
+
+        {%- unless p.has_only_default_variant -%}
+          <div class="pb-pdp__options" data-pb-options>
+            {%- for option in p.options_with_values -%}
+              <fieldset class="pb-pdp__option" data-option-index="{{ forloop.index0 }}">
+                <legend class="pb-pdp__option-label">{{ option.name }}{%- if s.show_size_guide and option.name contains 'Size' -%} <button type="button" class="pb-pdp__sizebtn" data-pb-sizeguide>Size guide</button>{%- endif -%}<span class="pb-pdp__option-value" data-pb-optval="{{ forloop.index0 }}">{{ option.selected_value }}</span></legend>
+                <div class="pb-pdp__swatches">
+                  {%- for value in option.values -%}
+                    {%- assign oid = 'opt-' | append: forloop.parentloop.index0 | append: '-' | append: forloop.index0 -%}
+                    <input type="radio" class="pb-pdp__swatch-in" id="{{ oid }}" name="option-{{ option.position }}" value="{{ value | escape }}" {% if option.selected_value == value %}checked{% endif %} data-pb-opt>
+                    <label for="{{ oid }}" class="pb-pdp__swatch">{{ value }}</label>
+                  {%- endfor -%}
+                </div>
+              </fieldset>
+            {%- endfor -%}
+          </div>
+        {%- endunless -%}
+
+        <div class="pb-pdp__buybar">
+          <div class="pb-qty" data-pb-qty>
+            <button type="button" class="pb-qty__btn" data-pb-qty-dec aria-label="Decrease quantity">{% render 'pb-icon', icon: 'minus' %}</button>
+            <input type="number" name="quantity" value="1" min="1" inputmode="numeric" class="pb-qty__input" aria-label="Quantity" data-pb-qty-input>
+            <button type="button" class="pb-qty__btn" data-pb-qty-inc aria-label="Increase quantity">{% render 'pb-icon', icon: 'plus' %}</button>
+          </div>
+          <button type="submit" name="add" class="pb-btn pb-pdp__add" data-pb-add {% unless v.available %}disabled{% endunless %}>
+            <span data-pb-add-text>{% if v.available %}{{ s.add_label | default: 'Add to cart' }}{% else %}{{ s.soldout_label | default: 'Sold out' }}{% endif %}</span>
+          </button>
+        </div>
+
+        {%- if s.show_dynamic_checkout -%}
+          <div class="pb-pdp__dynamic">{{ form | payment_button }}</div>
+        {%- endif -%}
+      {%- endform -%}
+
+      {%- if s.trust_text != blank -%}
+        <ul class="pb-pdp__trust">
+          {%- assign rows = s.trust_text | newline_to_br | split: '<br />' -%}
+          {%- for row in rows -%}{%- if row != blank -%}<li>{% render 'pb-icon', icon: 'check' %} {{ row | strip }}</li>{%- endif -%}{%- endfor -%}
+        </ul>
+      {%- endif -%}
+
+      {%- comment -%} ----- Accordions ----- {%- endcomment -%}
+      <div class="pb-pdp__acc">
+        {%- if s.show_description and p.description != blank -%}
+          <details class="pb-pdp__acc-item" open>
+            <summary>{{ s.description_label | default: 'Details' }} {% render 'pb-icon', icon: 'chevron' %}</summary>
+            <div class="pb-pdp__acc-body rte">{{ p.description }}</div>
+          </details>
+        {%- endif -%}
+        {%- for block in section.blocks -%}
+          {%- if block.type == 'collapsible' -%}
+            <details class="pb-pdp__acc-item" {{ block.shopify_attributes }}>
+              <summary>{% if block.settings.icon != 'none' %}{% render 'pb-icon', icon: block.settings.icon %}{% endif %}{{ block.settings.title }} {% render 'pb-icon', icon: 'chevron' %}</summary>
+              <div class="pb-pdp__acc-body rte">{{ block.settings.content }}</div>
+            </details>
+          {%- endif -%}
+        {%- endfor -%}
+      </div>
+
+      {%- if s.show_share -%}
+        <div class="pb-pdp__share">
+          <span>Share</span>
+          <a href="https://www.facebook.com/sharer.php?u={{ shop.url }}{{ p.url }}" target="_blank" rel="noopener" aria-label="Share on Facebook">Facebook</a>
+          <a href="https://twitter.com/intent/tweet?url={{ shop.url }}{{ p.url }}&text={{ p.title | url_encode }}" target="_blank" rel="noopener" aria-label="Share on X">X</a>
+          <a href="https://pinterest.com/pin/create/button/?url={{ shop.url }}{{ p.url }}&media={{ p.featured_media | image_url: width: 800 | prepend: 'https:' }}&description={{ p.title | url_encode }}" target="_blank" rel="noopener" aria-label="Share on Pinterest">Pinterest</a>
+        </div>
+      {%- endif -%}
+    </div>
+  </div>
+
+  {%- comment -%} Size guide modal {%- endcomment -%}
+  {%- if s.show_size_guide and s.size_guide != blank -%}
+    <div class="pb-modal" data-pb-sizeguide-modal hidden>
+      <div class="pb-modal__overlay" data-pb-sizeguide-close></div>
+      <div class="pb-modal__panel" role="dialog" aria-modal="true" aria-label="Size guide">
+        <button type="button" class="pb-modal__close" data-pb-sizeguide-close aria-label="Close">{% render 'pb-icon', icon: 'close' %}</button>
+        <div class="rte">{{ s.size_guide }}</div>
+      </div>
+    </div>
+  {%- endif -%}
+</section>
+
+{%- comment -%} Variant data for JS {%- endcomment -%}
+<script type="application/json" data-pb-variants>{{ p.variants | json }}</script>
+<script type="application/json" data-pb-media-map>
+[{%- for media in p.media -%}{"id":{{ media.id }}{% if media.media_type=='image' %},"src":"{{ media | image_url: width: 1200 }}"{% endif %}}{%- unless forloop.last -%},{%- endunless -%}{%- endfor -%}]
+</script>
+
+<script>
+(function(){
+  var sec=document.querySelector('[data-pb-pdp]');
+  if(!sec)return;
+  var form=sec.querySelector('#pb-product-form');
+  var variants=JSON.parse((document.querySelector('[data-pb-variants]')||{}).textContent||'[]');
+  var idInput=sec.querySelector('[data-pb-variant-id]');
+  var addBtn=sec.querySelector('[data-pb-add]');
+  var addText=sec.querySelector('[data-pb-add-text]');
+  var priceWrap=sec.querySelector('[data-pb-price]');
+  var moneyFmt={{ shop.money_format | json }};
+
+  function money(cents){
+    var v=(cents/100).toFixed(2);
+    return moneyFmt.replace(/\{\{\s*amount\s*\}\}/,v).replace(/\{\{\s*amount_no_decimals\s*\}\}/,Math.round(cents/100)).replace(/\{\{.*?\}\}/,v);
+  }
+  function selectedOptions(){
+    return Array.prototype.map.call(sec.querySelectorAll('[data-pb-opt]:checked'),function(i){return i.value;});
+  }
+  function findVariant(opts){
+    return variants.find(function(vr){return (vr.options||[]).every(function(o,i){return o===opts[i];});});
+  }
+  function updateMedia(mediaId){
+    if(!mediaId)return;
+    sec.querySelectorAll('[data-pb-stage] .pb-pdp__slide').forEach(function(sl){sl.classList.toggle('is-active',sl.getAttribute('data-media-id')==String(mediaId));});
+    sec.querySelectorAll('[data-pb-thumbs] .pb-pdp__thumb').forEach(function(t){t.classList.toggle('is-active',t.getAttribute('data-media-target')==String(mediaId));});
+    var active=sec.querySelector('[data-pb-stage] .pb-pdp__slide.is-active');
+    if(active&&sec.querySelector('[data-pb-stage]').scrollWidth>sec.querySelector('[data-pb-stage]').clientWidth){active.scrollIntoView({block:'nearest',inline:'center',behavior:'smooth'});}
+  }
+  function onChange(){
+    var opts=selectedOptions();
+    sec.querySelectorAll('[data-pb-optval]').forEach(function(el,i){el.textContent=opts[i]||'';});
+    var vr=findVariant(opts);
+    if(!vr){addBtn.disabled=true;addText.textContent='Unavailable';return;}
+    idInput.value=vr.id;
+    // URL
+    try{var u=new URL(window.location.href);u.searchParams.set('variant',vr.id);window.history.replaceState({},'',u.toString());}catch(e){}
+    // Price
+    var html='';
+    if(vr.compare_at_price&&vr.compare_at_price>vr.price){html+='<s>'+money(vr.compare_at_price)+'</s><span class="is-sale">'+money(vr.price)+'</span><span class="pb-pdp__save">Save '+money(vr.compare_at_price-vr.price)+'</span>';}
+    else{html+='<span>'+money(vr.price)+'</span>';}
+    priceWrap.innerHTML=html;
+    // Availability
+    addBtn.disabled=!vr.available;
+    addText.textContent=vr.available?'{{ s.add_label | default: "Add to cart" }}':'{{ s.soldout_label | default: "Sold out" }}';
+    // Media
+    if(vr.featured_media&&vr.featured_media.id)updateMedia(vr.featured_media.id);
+    // Notify sticky bar
+    document.dispatchEvent(new CustomEvent('pb:variant:change',{detail:{id:vr.id,price:money(vr.price),available:vr.available}}));
+  }
+  sec.querySelectorAll('[data-pb-opt]').forEach(function(i){i.addEventListener('change',onChange);});
+
+  /* Thumbs */
+  sec.querySelectorAll('[data-pb-thumbs] .pb-pdp__thumb').forEach(function(t){
+    t.addEventListener('click',function(){updateMedia(t.getAttribute('data-media-target'));});
+  });
+
+  /* Quantity */
+  var qi=sec.querySelector('[data-pb-qty-input]');
+  sec.querySelector('[data-pb-qty-dec]').addEventListener('click',function(){qi.value=Math.max(1,(parseInt(qi.value)||1)-1);});
+  sec.querySelector('[data-pb-qty-inc]').addEventListener('click',function(){qi.value=(parseInt(qi.value)||1)+1;});
+
+  /* AJAX add (progressive enhancement over native form) */
+  form.addEventListener('submit',function(e){
+    e.preventDefault();
+    addBtn.setAttribute('aria-busy','true');
+    var body=new FormData(form);
+    fetch('/cart/add.js',{method:'POST',headers:{'Accept':'application/json'},body:body})
+      .then(function(r){return r.json();})
+      .then(function(){
+        addBtn.removeAttribute('aria-busy');addBtn.classList.add('is-added');addText.textContent='Added to cart';
+        document.dispatchEvent(new CustomEvent('pb:cart:updated'));
+        setTimeout(function(){addBtn.classList.remove('is-added');addText.textContent='{{ s.add_label | default: "Add to cart" }}';},2000);
+      })
+      .catch(function(){addBtn.removeAttribute('aria-busy');form.submit();});
+  });
+
+  /* Size guide modal */
+  var modal=sec.querySelector('[data-pb-sizeguide-modal]');
+  if(modal){
+    sec.querySelectorAll('[data-pb-sizeguide]').forEach(function(b){b.addEventListener('click',function(){modal.hidden=false;requestAnimationFrame(function(){modal.classList.add('is-open');});document.body.style.overflow='hidden';});});
+    modal.querySelectorAll('[data-pb-sizeguide-close]').forEach(function(b){b.addEventListener('click',function(){modal.classList.remove('is-open');document.body.style.overflow='';setTimeout(function(){modal.hidden=true;},300);});});
+  }
+})();
+</script>
+
+{% stylesheet %}
+.pb-pdp__grid{display:grid;grid-template-columns:1fr;gap:clamp(1.5rem,4vw,3.5rem);}
+.pb-pdp__media{min-width:0;}
+.pb-pdp__crumbs{margin-bottom:1rem;}
+.pb-pdp__crumbs--m{display:block;}.pb-pdp__crumbs--d{display:none;}
+.pb-pdp__stage{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:0;border-radius:var(--pb-radius-lg);scrollbar-width:none;background:var(--pb-bg-secondary);width:100%;max-width:100%;min-width:0;}
+.pb-pdp__stage::-webkit-scrollbar{display:none;}
+.pb-pdp__slide{flex:0 0 100%;scroll-snap-align:center;aspect-ratio:1/1;display:none;min-width:0;max-width:100%;}
+.pb-pdp__slide.is-active{display:block;}
+.pb-pdp__slide img,.pb-pdp__ph{width:100%;height:100%;object-fit:contain;display:block;background:var(--pb-bg-secondary);}
+.pb-pdp__thumbs{display:flex;gap:.6rem;margin-top:.8rem;overflow-x:auto;scrollbar-width:none;}
+.pb-pdp__thumbs::-webkit-scrollbar{display:none;}
+.pb-pdp__thumb{flex:0 0 auto;width:64px;height:80px;border:1px solid transparent;border-radius:var(--pb-radius);overflow:hidden;cursor:pointer;background:none;padding:0;opacity:.6;transition:opacity .25s,border-color .25s;}
+.pb-pdp__thumb img{width:100%;height:100%;object-fit:cover;}
+.pb-pdp__thumb.is-active{opacity:1;border-color:var(--pb-gold);}
+.pb-pdp__vendor{font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--pb-gold);font-weight:600;margin:0 0 .6rem;}
+.pb-pdp__title{font-family:var(--pb-font-heading);font-size:clamp(1.8rem,4vw,2.8rem);line-height:1.04;font-weight:600;letter-spacing:-.015em;margin:0;}
+.pb-pdp__rating{display:flex;align-items:center;gap:.5rem;margin-top:.7rem;}
+.pb-pdp__stars{display:inline-flex;gap:2px;color:var(--pb-gold);}
+.pb-pdp__rcount{font-size:.8rem;color:var(--pb-muted);}
+.pb-pdp__price{display:flex;align-items:baseline;flex-wrap:wrap;gap:.6rem;margin-top:1.1rem;font-size:1.35rem;font-weight:600;}
+.pb-pdp__price s{color:var(--pb-muted);font-weight:400;font-size:1.05rem;}
+.pb-pdp__price .is-sale{color:var(--pb-gold);}
+.pb-pdp__save{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;background:var(--pb-gold-soft);color:#7a5c00;padding:.25rem .6rem;border-radius:3px;font-weight:700;}
+.pb-pdp__taxline{font-size:.76rem;color:var(--pb-muted);margin:.5rem 0 0;}
+.pb-pdp__form{margin-top:1.8rem;}
+.pb-pdp__option{border:0;padding:0;margin:0 0 1.3rem;}
+.pb-pdp__option-label{display:flex;align-items:center;gap:.6rem;font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;font-weight:600;padding:0;margin-bottom:.6rem;}
+.pb-pdp__option-value{color:var(--pb-muted);text-transform:none;letter-spacing:0;font-weight:400;}
+.pb-pdp__sizebtn{margin-left:auto;background:none;border:0;text-decoration:underline;text-underline-offset:3px;color:var(--pb-text);cursor:pointer;font-size:.72rem;text-transform:none;letter-spacing:0;}
+.pb-pdp__swatches{display:flex;flex-wrap:wrap;gap:.5rem;}
+.pb-pdp__swatch-in{position:absolute;opacity:0;width:0;height:0;}
+.pb-pdp__swatch{display:inline-flex;align-items:center;justify-content:center;min-width:48px;height:46px;padding:0 1rem;border:1px solid var(--pb-line-strong);border-radius:var(--pb-radius);cursor:pointer;font-size:.85rem;transition:all .25s var(--pb-ease);background:var(--pb-card);}
+.pb-pdp__swatch:hover{border-color:var(--pb-text);}
+.pb-pdp__swatch-in:checked + .pb-pdp__swatch{background:var(--pb-text);color:#fff;border-color:var(--pb-text);}
+.pb-pdp__swatch-in:focus-visible + .pb-pdp__swatch{outline:2px solid var(--pb-gold);outline-offset:2px;}
+.pb-pdp__buybar{display:flex;gap:.7rem;margin-top:.5rem;}
+.pb-qty{display:inline-flex;align-items:center;border:1px solid var(--pb-line-strong);border-radius:var(--pb-radius);flex:0 0 auto;}
+.pb-qty__btn{width:46px;height:54px;display:grid;place-items:center;background:none;border:0;cursor:pointer;color:var(--pb-text);}
+.pb-qty__input{width:44px;height:54px;text-align:center;border:0;background:transparent;font-size:1rem;-moz-appearance:textfield;}
+.pb-qty__input::-webkit-outer-spin-button,.pb-qty__input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+.pb-pdp__add{flex:1;background:var(--pb-text);color:#fff;border-color:var(--pb-text);}
+.pb-pdp__add:hover{background:var(--pb-gold);border-color:var(--pb-gold);color:#1a1407;}
+.pb-pdp__add:disabled{background:var(--pb-muted);border-color:var(--pb-muted);cursor:not-allowed;}
+.pb-pdp__add.is-added{background:var(--pb-gold);border-color:var(--pb-gold);color:#1a1407;}
+.pb-pdp__add[aria-busy=true]{opacity:.7;pointer-events:none;}
+.pb-pdp__dynamic{margin-top:.7rem;}
+.pb-pdp__dynamic .shopify-payment-button__button{border-radius:var(--pb-radius)!important;min-height:54px;}
+.pb-pdp__trust{list-style:none;margin:1.6rem 0 0;padding:1.4rem 0 0;border-top:1px solid var(--pb-line);display:grid;gap:.7rem;}
+.pb-pdp__trust li{display:flex;align-items:center;gap:.6rem;font-size:.86rem;color:var(--pb-muted);}
+.pb-pdp__trust svg{color:var(--pb-gold);flex:0 0 auto;}
+.pb-pdp__acc{margin-top:1.8rem;border-top:1px solid var(--pb-line);}
+.pb-pdp__acc-item{border-bottom:1px solid var(--pb-line);}
+.pb-pdp__acc-item summary{display:flex;align-items:center;gap:.6rem;padding:1.1rem 0;cursor:pointer;list-style:none;font-weight:600;font-size:.95rem;}
+.pb-pdp__acc-item summary::-webkit-details-marker{display:none;}
+.pb-pdp__acc-item summary > svg:last-child{margin-left:auto;transition:transform .3s var(--pb-ease);}
+.pb-pdp__acc-item[open] summary > svg:last-child{transform:rotate(180deg);}
+.pb-pdp__acc-body{padding:0 0 1.3rem;font-size:.92rem;line-height:1.7;color:var(--pb-muted);}
+.pb-pdp__acc-body p{margin:0 0 .8rem;}
+.pb-pdp__share{display:flex;align-items:center;gap:1rem;margin-top:1.6rem;font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;}
+.pb-pdp__share span{color:var(--pb-muted);}
+.pb-pdp__share a{color:var(--pb-text);text-decoration:none;border-bottom:1px solid transparent;transition:border-color .25s;}
+.pb-pdp__share a:hover{border-color:var(--pb-gold);}
+/* Modal */
+.pb-modal{display:none;position:fixed;inset:0;z-index:90;place-items:center;padding:1rem;}
+.pb-modal:not([hidden]){display:grid;}
+.pb-modal__overlay{position:absolute;inset:0;background:rgba(17,17,17,.55);opacity:0;transition:opacity .3s;}
+.pb-modal.is-open .pb-modal__overlay{opacity:1;}
+.pb-modal__panel{position:relative;background:var(--pb-card);border-radius:var(--pb-radius-lg);max-width:640px;width:100%;max-height:84vh;overflow:auto;padding:2rem;transform:scale(.96);opacity:0;transition:all .3s var(--pb-ease);}
+.pb-modal.is-open .pb-modal__panel{transform:none;opacity:1;}
+.pb-modal__close{position:absolute;top:1rem;right:1rem;background:none;border:0;cursor:pointer;color:var(--pb-text);}
+@media(min-width:990px){
+  .pb-pdp__grid{grid-template-columns:1.05fr 1fr;align-items:start;}
+  .pb-pdp__media{position:sticky;top:90px;min-width:0;}
+  .pb-pdp__stage{overflow:hidden;flex-direction:column;gap:1rem;width:100%;max-width:100%;}
+  .pb-pdp__slide{flex:none;width:100%;max-width:100%;}
+  .pb-pdp__crumbs--m{display:none;}.pb-pdp__crumbs--d{display:block;}
+}
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "PB · Main Product",
+  "tag": "section",
+  "settings": [
+    { "type": "checkbox", "id": "show_breadcrumb", "label": "Breadcrumb", "default": true },
+    { "type": "checkbox", "id": "show_vendor", "label": "Show vendor", "default": true },
+    { "type": "checkbox", "id": "show_rating", "label": "Show rating (needs reviews metafield)", "default": false },
+    { "type": "checkbox", "id": "show_taxline", "label": "Show tax/shipping line", "default": true },
+    { "type": "checkbox", "id": "show_dynamic_checkout", "label": "Show dynamic checkout buttons", "default": true },
+    { "type": "checkbox", "id": "show_description", "label": "Show description accordion", "default": true },
+    { "type": "text", "id": "description_label", "label": "Description label", "default": "Details" },
+    { "type": "checkbox", "id": "show_share", "label": "Show share", "default": true },
+    { "type": "text", "id": "add_label", "label": "Add to cart label", "default": "Add to cart" },
+    { "type": "text", "id": "soldout_label", "label": "Sold out label", "default": "Sold out" },
+    { "type": "textarea", "id": "trust_text", "label": "Trust points (one per line)", "default": "Free shipping over $120\n30-day easy returns\nDesigned with Punjabi pride" },
+    { "type": "header", "content": "Size guide" },
+    { "type": "checkbox", "id": "show_size_guide", "label": "Enable size guide", "default": true },
+    { "type": "richtext", "id": "size_guide", "label": "Size guide content", "default": "<p>Our streetwear runs true to size with a relaxed fit. Size up for an oversized look.</p>" },
+    { "type": "color", "id": "bg", "label": "Background", "default": "#F5F1E8" }
+  ],
+  "blocks": [
+    { "type": "collapsible", "name": "Accordion row", "settings": [
+      { "type": "text", "id": "title", "label": "Title", "default": "Shipping & returns" },
+      { "type": "select", "id": "icon", "label": "Icon", "options": [
+        { "value": "none", "label": "None" }, { "value": "truck", "label": "Shipping" },
+        { "value": "ruler", "label": "Ruler" }, { "value": "leaf", "label": "Material" }, { "value": "return", "label": "Returns" } ], "default": "truck" },
+      { "type": "richtext", "id": "content", "label": "Content", "default": "<p>Free worldwide shipping over $120. Orders ship in 1–2 business days. 30-day returns on unworn items.</p>" }
+    ] }
+  ],
+  "max_blocks": 6,
+  "enabled_on": { "templates": ["product"] },
+  "presets": [ { "name": "PB · Main Product", "blocks": [
+    { "type": "collapsible", "settings": { "title": "Shipping & returns", "icon": "truck" } },
+    { "type": "collapsible", "settings": { "title": "Materials & care", "icon": "leaf", "content": "<p>Premium heavyweight cotton. Machine wash cold, inside out. Do not tumble dry.</p>" } }
+  ] } ]
+}
+{% endschema %}

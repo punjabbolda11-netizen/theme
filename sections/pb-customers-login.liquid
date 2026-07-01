@@ -1,0 +1,83 @@
+{%- comment -%} Punjab Bolda · Customer Login (classic accounts) — native customer_login + recover {%- endcomment -%}
+{%- liquid assign s = section.settings -%}
+<section class="pb pb-auth" style="background:{{ s.bg }};" data-pb-login>
+  <div class="pb-wrap" style="display:grid;place-items:center;">
+
+    {%- comment -%} Login ----------------------------------------------------- {%- endcomment -%}
+    <div class="pb-auth__card" data-pb-login-card>
+      <div class="pb-auth__head">
+        {%- if s.eyebrow != blank -%}<p class="pb-eyebrow pb-eyebrow--center">{{ s.eyebrow }}</p>{%- endif -%}
+        <h1 class="pb-auth__title">{{ s.heading | default: 'Sign in' }}</h1>
+        {%- if s.subheading != blank -%}<p class="pb-auth__sub">{{ s.subheading }}</p>{%- endif -%}
+      </div>
+
+      {%- form 'customer_login', novalidate: 'novalidate' -%}
+        {%- if form.errors -%}
+          <div class="pb-auth__errors" role="alert">{{ form.errors | default_errors }}</div>
+        {%- endif -%}
+        <div class="pb-field">
+          <label for="pb-login-email">Email</label>
+          <input type="email" id="pb-login-email" name="customer[email]" autocomplete="email" required>
+        </div>
+        {%- if form.password_needed -%}
+          <div class="pb-field">
+            <label for="pb-login-pass">Password</label>
+            <input type="password" id="pb-login-pass" name="customer[password]" autocomplete="current-password" required>
+          </div>
+          <p style="text-align:right;margin:-.4rem 0 1rem;"><button type="button" class="pb-auth__link" data-pb-show-recover>Forgot password?</button></p>
+        {%- endif -%}
+        <button type="submit" class="pb-btn pb-auth__btn">{{ s.login_label | default: 'Sign in' }}</button>
+      {%- endform -%}
+
+      <p class="pb-auth__alt">New here? <a href="{{ routes.account_register_url }}">Create an account</a></p>
+      {%- if s.show_guest -%}<p class="pb-auth__alt"><a href="{{ routes.root_url }}">Continue shopping as guest</a></p>{%- endif -%}
+    </div>
+
+    {%- comment -%} Recover password ------------------------------------------ {%- endcomment -%}
+    <div class="pb-auth__card" data-pb-recover-card hidden>
+      <div class="pb-auth__head">
+        <h2 class="pb-auth__title">Reset password</h2>
+        <p class="pb-auth__sub">We’ll email you a link to reset it.</p>
+      </div>
+      {%- form 'recover_customer_password' -%}
+        {%- if form.posted_successfully? -%}
+          <div class="pb-auth__success" role="status">If that email exists, a reset link is on its way.</div>
+        {%- endif -%}
+        {%- if form.errors -%}<div class="pb-auth__errors" role="alert">{{ form.errors | default_errors }}</div>{%- endif -%}
+        <div class="pb-field">
+          <label for="pb-recover-email">Email</label>
+          <input type="email" id="pb-recover-email" name="email" autocomplete="email" required>
+        </div>
+        <button type="submit" class="pb-btn pb-auth__btn">Send reset link</button>
+      {%- endform -%}
+      <p class="pb-auth__alt"><button type="button" class="pb-auth__link" data-pb-show-login>Back to sign in</button></p>
+    </div>
+  </div>
+</section>
+
+<script>
+(function(){
+  var sec=document.querySelector('[data-pb-login]');if(!sec)return;
+  var login=sec.querySelector('[data-pb-login-card]'),recover=sec.querySelector('[data-pb-recover-card]');
+  function show(which){login.hidden=which!=='login';recover.hidden=which!=='recover';}
+  sec.querySelectorAll('[data-pb-show-recover]').forEach(function(b){b.addEventListener('click',function(){show('recover');});});
+  sec.querySelectorAll('[data-pb-show-login]').forEach(function(b){b.addEventListener('click',function(){show('login');});});
+  if(window.location.hash==='#recover')show('recover');
+})();
+</script>
+
+{% schema %}
+{
+  "name": "PB · Login",
+  "tag": "section",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "WELCOME BACK" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Sign in" },
+    { "type": "text", "id": "subheading", "label": "Subheading", "default": "Access your orders, addresses and exclusive drops." },
+    { "type": "text", "id": "login_label", "label": "Sign in button", "default": "Sign in" },
+    { "type": "checkbox", "id": "show_guest", "label": "Show continue as guest", "default": true },
+    { "type": "color", "id": "bg", "label": "Background", "default": "#EEE1D3" }
+  ],
+  "presets": [ { "name": "PB · Login" } ]
+}
+{% endschema %}

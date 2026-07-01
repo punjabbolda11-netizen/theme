@@ -1,0 +1,61 @@
+{%- comment -%} Punjab Bolda · 404 — elegant not-found {%- endcomment -%}
+{%- liquid assign s = section.settings -%}
+<section class="pb pb-404{% if s.image != blank %} has-image{% endif %}" style="background:{% if s.image == blank %}{{ s.bg }}{% else %}var(--pb-text){% endif %};{% if s.image != blank %}--pb-404-overlay:{{ s.overlay | divided_by: 100.0 }};{% endif %}">
+  {%- if s.image != blank -%}
+    <div class="pb-404__media" aria-hidden="true">
+      <img src="{{ s.image | image_url: width: 2000 }}" sizes="100vw" width="{{ s.image.width }}" height="{{ s.image.height }}" alt="" loading="eager">
+    </div>
+  {%- endif -%}
+  <div class="pb-wrap pb-404__inner">
+    <p class="pb-404__code pb-reveal">404</p>
+    <h1 class="pb-404__title pb-reveal" style="--pb-delay:80ms">{{ s.heading | default: 'This page took a different path.' }}</h1>
+    <p class="pb-404__text pb-reveal" style="--pb-delay:160ms">{{ s.text | default: 'The page you’re looking for has moved or never existed — but the culture lives on. Let’s get you back.' }}</p>
+
+    <form action="{{ routes.search_url }}" method="get" role="search" class="pb-404__search pb-reveal" style="--pb-delay:220ms">
+      <input type="search" name="q" placeholder="Search the store…" aria-label="Search">
+      <button type="submit" aria-label="Search">{% render 'pb-icon', icon: 'search' %}</button>
+    </form>
+
+    <div class="pb-actions pb-actions--center pb-reveal" style="--pb-delay:300ms">
+      {%- if s.btn1_label != blank -%}<a class="pb-btn {% if s.image != blank %}pb-btn--light{% else %}pb-btn--gold{% endif %}" href="{{ s.btn1_link | default: routes.root_url }}">{{ s.btn1_label }}</a>{%- endif -%}
+      {%- if s.btn2_label != blank -%}<a class="pb-btn pb-btn--ghost {% if s.image != blank %}pb-btn--on-dark{% endif %}" href="{{ s.btn2_link | default: routes.all_products_collection_url }}">{{ s.btn2_label }}</a>{%- endif -%}
+    </div>
+  </div>
+</section>
+
+{% stylesheet %}
+.pb-404{position:relative;display:grid;place-items:center;min-height:78svh;text-align:center;overflow:hidden;isolation:isolate;color:var(--pb-text);}
+.pb-404.has-image{color:#fff;}
+.pb-404__media{position:absolute;inset:0;z-index:-1;}
+.pb-404__media::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,var(--pb-404-overlay,.5));}
+.pb-404__media img{width:100%;height:100%;object-fit:cover;}
+.pb-404__inner{max-width:620px;}
+.pb-404__code{font-family:var(--pb-font-heading);font-size:clamp(4rem,16vw,9rem);font-weight:700;line-height:1;color:var(--pb-gold);margin:0;}
+.pb-404__title{font-family:var(--pb-font-heading);font-size:var(--pb-h2);font-weight:600;line-height:1.05;margin:.5rem 0 0;text-wrap:balance;}
+.pb-404__text{font-size:var(--pb-body);line-height:1.6;opacity:.85;margin:1rem auto 0;max-width:46ch;}
+.pb-404__search{display:flex;align-items:center;gap:.5rem;max-width:420px;margin:2rem auto 0;border:1px solid currentColor;border-radius:var(--pb-radius);padding:.3rem .3rem .3rem 1rem;}
+.pb-404__search input{flex:1;border:0;background:transparent;color:inherit;font-size:1rem;outline:none;min-width:0;padding:.7rem 0;}
+.pb-404__search input::placeholder{color:currentColor;opacity:.6;}
+.pb-404__search button{background:transparent;border:0;color:inherit;cursor:pointer;width:44px;height:44px;display:grid;place-items:center;}
+.pb-404 .pb-actions{margin-top:2rem;}
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "PB · 404",
+  "tag": "section",
+  "settings": [
+    { "type": "text", "id": "heading", "label": "Heading", "default": "This page took a different path." },
+    { "type": "textarea", "id": "text", "label": "Text", "default": "The page you’re looking for has moved or never existed — but the culture lives on. Let’s get you back." },
+    { "type": "text", "id": "btn1_label", "label": "Button 1 label", "default": "Back to home" },
+    { "type": "url", "id": "btn1_link", "label": "Button 1 link" },
+    { "type": "text", "id": "btn2_label", "label": "Button 2 label", "default": "Shop all" },
+    { "type": "url", "id": "btn2_link", "label": "Button 2 link" },
+    { "type": "image_picker", "id": "image", "label": "Background image (optional)" },
+    { "type": "range", "id": "overlay", "min": 0, "max": 80, "step": 5, "unit": "%", "label": "Image darkening", "default": 50 },
+    { "type": "color", "id": "bg", "label": "Background (no image)", "default": "#EEE1D3" }
+  ],
+  "enabled_on": { "templates": ["404"] },
+  "presets": [ { "name": "PB · 404" } ]
+}
+{% endschema %}

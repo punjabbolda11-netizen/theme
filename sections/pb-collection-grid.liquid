@@ -1,0 +1,247 @@
+{%- comment -%}
+  Punjab Bolda · Collection Grid
+  Uses Shopify's NATIVE faceted filtering (collection.filters), sorting and pagination.
+  Enable filters in Shopify admin → Online Store → Navigation → Collection filters.
+{%- endcomment -%}
+{%- assign s = section.settings -%}
+{%- assign per = s.per_page -%}
+{%- paginate collection.products by per -%}
+<section class="pb pb-section pb-cgrid" style="background:{{ s.bg }};">
+  <div class="pb-wrap">
+
+    {%- comment -%} ---- Toolbar ---- {%- endcomment -%}
+    <div class="pb-cgrid__bar">
+      <div class="pb-cgrid__meta">
+        {%- if s.show_filters and collection.filters != empty -%}
+          <button type="button" class="pb-cgrid__toggle" data-pb-filter-toggle aria-expanded="false" aria-controls="pb-filters">
+            {% render 'pb-icon', icon: 'menu' %} <span>Filter</span>
+          </button>
+        {%- endif -%}
+        <span class="pb-cgrid__count">{{ collection.products_count }} {{ collection.products_count | pluralize: 'item', 'items' }}</span>
+      </div>
+      {%- if s.show_sort -%}
+        <form class="pb-cgrid__sortform" data-pb-sort>
+          <label for="pb-sort" class="pb-cgrid__sortlabel">Sort</label>
+          <div class="pb-cgrid__select">
+            <select id="pb-sort" name="sort_by" data-pb-autosubmit>
+              {%- assign current = collection.sort_by | default: collection.default_sort_by -%}
+              {%- for opt in collection.sort_options -%}
+                <option value="{{ opt.value }}" {% if opt.value == current %}selected{% endif %}>{{ opt.name }}</option>
+              {%- endfor -%}
+            </select>
+            {% render 'pb-icon', icon: 'chevron' %}
+          </div>
+        </form>
+      {%- endif -%}
+    </div>
+
+    <div class="pb-cgrid__layout">
+      {%- comment -%} ---- Native filter facets ---- {%- endcomment -%}
+      {%- if s.show_filters and collection.filters != empty -%}
+        <aside class="pb-cgrid__filters" id="pb-filters" data-pb-filters>
+          <form data-pb-filter-form>
+            <div class="pb-cgrid__filters-head">
+              <span>Filters</span>
+              <button type="button" class="pb-cgrid__filters-close" data-pb-filter-toggle aria-label="Close filters">{% render 'pb-icon', icon: 'close' %}</button>
+            </div>
+
+            {%- if collection.sort_by != blank -%}<input type="hidden" name="sort_by" value="{{ collection.sort_by }}">{%- endif -%}
+
+            {%- for filter in collection.filters -%}
+              <details class="pb-facet" open>
+                <summary>{{ filter.label }} {% render 'pb-icon', icon: 'chevron' %}</summary>
+                <div class="pb-facet__body">
+                  {%- case filter.type -%}
+                    {%- when 'list', 'boolean' -%}
+                      <ul class="pb-facet__list">
+                        {%- for v in filter.values -%}
+                          <li>
+                            <label class="pb-facet__opt {% if v.count == 0 and v.active == false %}is-disabled{% endif %}">
+                              <input type="checkbox" name="{{ v.param_name }}" value="{{ v.value }}" {% if v.active %}checked{% endif %} {% if v.count == 0 and v.active == false %}disabled{% endif %} data-pb-autosubmit>
+                              <span class="pb-facet__box">{% render 'pb-icon', icon: 'check' %}</span>
+                              <span class="pb-facet__name">{{ v.label }}</span>
+                              <span class="pb-facet__count">{{ v.count }}</span>
+                            </label>
+                          </li>
+                        {%- endfor -%}
+                      </ul>
+                    {%- when 'price_range' -%}
+                      <div class="pb-facet__price">
+                        <label>Min<input type="number" name="{{ filter.min_value.param_name }}" inputmode="decimal" placeholder="0" value="{{ filter.min_value.value }}" min="0" max="{{ filter.range_max | money_without_currency | strip_html }}" data-pb-autosubmit></label>
+                        <label>Max<input type="number" name="{{ filter.max_value.param_name }}" inputmode="decimal" placeholder="{{ filter.range_max | money_without_currency | strip_html }}" value="{{ filter.max_value.value }}" min="0" max="{{ filter.range_max | money_without_currency | strip_html }}" data-pb-autosubmit></label>
+                      </div>
+                  {%- endcase -%}
+                </div>
+              </details>
+            {%- endfor -%}
+
+            <noscript><button type="submit" class="pb-btn pb-btn--ghost pb-mt-1">Apply</button></noscript>
+          </form>
+
+          {%- comment -%} Active filter pills {%- endcomment -%}
+          {%- assign has_active = false -%}
+          {%- for f in collection.filters -%}
+            {%- if f.active_values.size > 0 -%}{%- assign has_active = true -%}{%- endif -%}
+            {%- if f.min_value.value or f.max_value.value -%}{%- assign has_active = true -%}{%- endif -%}
+          {%- endfor -%}
+          {%- if has_active -%}
+            <div class="pb-cgrid__active">
+              {%- for f in collection.filters -%}
+                {%- for v in f.active_values -%}
+                  <a class="pb-pill" href="{{ v.url_to_remove }}">{{ v.label }} {% render 'pb-icon', icon: 'close' %}</a>
+                {%- endfor -%}
+                {%- if f.type == 'price_range' -%}
+                  {%- if f.min_value.value or f.max_value.value -%}
+                    <a class="pb-pill" href="{{ f.url_to_remove }}">{{ f.label }} {% render 'pb-icon', icon: 'close' %}</a>
+                  {%- endif -%}
+                {%- endif -%}
+              {%- endfor -%}
+              <a class="pb-pill pb-pill--clear" href="{{ collection.url }}">Clear all</a>
+            </div>
+          {%- endif -%}
+        </aside>
+      {%- endif -%}
+
+      {%- comment -%} ---- Products ---- {%- endcomment -%}
+      <div class="pb-cgrid__main">
+        {%- if collection.products.size > 0 -%}
+          <div class="pb-cgrid__products">
+            {%- for product in collection.products -%}
+              {% render 'pb-product-card', product: product, quick_add: s.quick_add %}
+            {%- endfor -%}
+          </div>
+
+          {%- if paginate.pages > 1 -%}
+            <nav class="pb-pagination" aria-label="Pagination">
+              {%- if paginate.previous -%}<a class="pb-pagination__arrow" href="{{ paginate.previous.url }}" aria-label="Previous page">{% render 'pb-icon', icon: 'arrow-left' %}</a>{%- endif -%}
+              {%- for part in paginate.parts -%}
+                {%- if part.is_link -%}<a class="pb-pagination__num" href="{{ part.url }}">{{ part.title }}</a>
+                {%- elsif part.title == paginate.current_page -%}<span class="pb-pagination__num is-current" aria-current="page">{{ part.title }}</span>
+                {%- else -%}<span class="pb-pagination__gap">{{ part.title }}</span>{%- endif -%}
+              {%- endfor -%}
+              {%- if paginate.next -%}<a class="pb-pagination__arrow" href="{{ paginate.next.url }}" aria-label="Next page">{% render 'pb-icon', icon: 'arrow-right' %}</a>{%- endif -%}
+            </nav>
+          {%- endif -%}
+        {%- else -%}
+          <div class="pb-cgrid__empty">
+            <p class="pb-h3">Nothing here yet.</p>
+            <p class="pb-lead">No products match your filters. Try clearing them or browse another collection.</p>
+            <a class="pb-btn pb-btn--ghost pb-mt-1" href="{{ collection.url }}">Clear filters</a>
+          </div>
+        {%- endif -%}
+      </div>
+      </div>
+    </div>
+  </div>
+  {% endpaginate %}
+</section>
+
+<script>
+(function(){
+  var sec=document.currentScript.previousElementSibling;
+  /* Auto-submit sort (preserves filters by navigating with merged params) */
+  var sortSel=sec.querySelector('[data-pb-sort] [data-pb-autosubmit]');
+  if(sortSel){sortSel.addEventListener('change',function(){
+    var u=new URL(window.location.href);u.searchParams.set('sort_by',sortSel.value);u.searchParams.delete('page');window.location.href=u.toString();
+  });}
+  /* Auto-submit filter form → navigate to collection URL with selected facets */
+  var ff=sec.querySelector('[data-pb-filter-form]');
+  var baseUrl='{{ collection.url }}';
+  if(ff){
+    var apply=function(){
+      var fd=new FormData(ff),p=new URLSearchParams();
+      fd.forEach(function(val,key){if(val!==''&&val!=null)p.append(key,val);});
+      var qs=p.toString();
+      window.location.href=baseUrl+(qs?'?'+qs:'');
+    };
+    ff.addEventListener('change',function(e){if(e.target.matches('[data-pb-autosubmit]'))apply();});
+    ff.addEventListener('submit',function(e){e.preventDefault();apply();});
+  }
+  /* Mobile filter drawer */
+  var panel=sec.querySelector('[data-pb-filters]');
+  sec.querySelectorAll('[data-pb-filter-toggle]').forEach(function(b){
+    b.addEventListener('click',function(){
+      var open=panel.classList.toggle('is-open');
+      document.body.style.overflow=open?'hidden':'';
+      sec.querySelectorAll('[data-pb-filter-toggle]').forEach(function(x){x.setAttribute('aria-expanded',open);});
+    });
+  });
+})();
+</script>
+
+{% stylesheet %}
+.pb-cgrid__bar{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding-bottom:1.4rem;margin-bottom:1.6rem;border-bottom:1px solid var(--pb-line);}
+.pb-cgrid__meta{display:flex;align-items:center;gap:1rem;}
+.pb-cgrid__toggle{display:inline-flex;align-items:center;gap:.5rem;background:transparent;border:1px solid var(--pb-line-strong);border-radius:var(--pb-radius);padding:.55rem .9rem;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;font-weight:600;cursor:pointer;color:var(--pb-text);}
+.pb-cgrid__count{font-size:.78rem;color:var(--pb-muted);letter-spacing:.06em;}
+.pb-cgrid__sortform{display:flex;align-items:center;gap:.6rem;}
+.pb-cgrid__sortlabel{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--pb-muted);}
+.pb-cgrid__select{position:relative;display:inline-flex;align-items:center;}
+.pb-cgrid__select select{appearance:none;-webkit-appearance:none;background:transparent;border:1px solid var(--pb-line-strong);border-radius:var(--pb-radius);padding:.55rem 2.2rem .55rem .9rem;font-family:var(--pb-font-body);font-size:.8rem;color:var(--pb-text);cursor:pointer;}
+.pb-cgrid__select svg{position:absolute;right:.7rem;pointer-events:none;}
+.pb-cgrid__layout{display:grid;grid-template-columns:1fr;gap:2rem;}
+.pb-cgrid__products{display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(1.2rem,2.5vw,2rem) clamp(.8rem,2vw,1.4rem);}
+/* Filters */
+.pb-cgrid__filters{position:fixed;inset:0 0 0 auto;z-index:80;width:min(86vw,360px);background:var(--pb-card);transform:translateX(100%);transition:transform .4s var(--pb-ease);overflow-y:auto;padding:1.2rem;box-shadow:var(--pb-shadow);}
+.pb-cgrid__filters.is-open{transform:none;}
+.pb-cgrid__filters-head{display:flex;align-items:center;justify-content:space-between;font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;font-weight:700;padding-bottom:1rem;border-bottom:1px solid var(--pb-line);margin-bottom:.5rem;}
+.pb-cgrid__filters-close{background:transparent;border:0;cursor:pointer;color:var(--pb-text);}
+.pb-facet{border-bottom:1px solid var(--pb-line);}
+.pb-facet summary{display:flex;align-items:center;justify-content:space-between;padding:1rem 0;cursor:pointer;list-style:none;font-weight:600;font-size:.9rem;}
+.pb-facet summary::-webkit-details-marker{display:none;}
+.pb-facet[open] summary svg{transform:rotate(180deg);}
+.pb-facet summary svg{transition:transform .3s var(--pb-ease);}
+.pb-facet__body{padding-bottom:1rem;}
+.pb-facet__list{list-style:none;margin:0;padding:0;display:grid;gap:.55rem;max-height:240px;overflow:auto;}
+.pb-facet__opt{display:flex;align-items:center;gap:.6rem;cursor:pointer;font-size:.86rem;}
+.pb-facet__opt.is-disabled{opacity:.4;cursor:not-allowed;}
+.pb-facet__opt input{position:absolute;opacity:0;width:0;height:0;}
+.pb-facet__box{width:18px;height:18px;border:1px solid var(--pb-line-strong);border-radius:3px;display:grid;place-items:center;color:#fff;flex:0 0 auto;}
+.pb-facet__box svg{opacity:0;width:14px;height:14px;}
+.pb-facet__opt input:checked + .pb-facet__box{background:var(--pb-text);border-color:var(--pb-text);}
+.pb-facet__opt input:checked + .pb-facet__box svg{opacity:1;}
+.pb-facet__opt input:focus-visible + .pb-facet__box{outline:2px solid var(--pb-gold);outline-offset:2px;}
+.pb-facet__name{flex:1;}
+.pb-facet__count{color:var(--pb-muted);font-size:.76rem;}
+.pb-facet__price{display:flex;gap:.8rem;}
+.pb-facet__price label{flex:1;display:flex;flex-direction:column;gap:.3rem;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--pb-muted);}
+.pb-facet__price input{border:1px solid var(--pb-line-strong);border-radius:var(--pb-radius);padding:.55rem .7rem;font-size:.9rem;}
+.pb-cgrid__active{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1.2rem;}
+.pb-pill{display:inline-flex;align-items:center;gap:.4rem;background:var(--pb-bg-secondary);border-radius:20px;padding:.35rem .75rem;font-size:.74rem;color:var(--pb-text);text-decoration:none;}
+.pb-pill svg{width:14px;height:14px;}
+.pb-pill--clear{background:transparent;text-decoration:underline;text-underline-offset:3px;}
+/* Pagination */
+.pb-pagination{display:flex;align-items:center;justify-content:center;gap:.4rem;margin-top:clamp(2.5rem,5vw,4rem);}
+.pb-pagination__num,.pb-pagination__arrow{display:grid;place-items:center;min-width:42px;height:42px;border-radius:50%;text-decoration:none;color:var(--pb-text);font-size:.85rem;border:1px solid transparent;transition:border-color .25s,background .25s;}
+.pb-pagination__num:hover,.pb-pagination__arrow:hover{border-color:var(--pb-line-strong);}
+.pb-pagination__num.is-current{background:var(--pb-text);color:#fff;}
+.pb-pagination__gap{padding:0 .3rem;color:var(--pb-muted);}
+.pb-cgrid__empty{text-align:center;padding:4rem 1rem;}
+.pb-cgrid__empty .pb-lead{margin-inline:auto;}
+@media(min-width:750px){
+  .pb-cgrid__products{grid-template-columns:repeat(3,1fr);}
+}
+@media(min-width:990px){
+  .pb-cgrid__layout{grid-template-columns:260px 1fr;gap:3rem;}
+  .pb-cgrid__filters{position:static;width:auto;transform:none;box-shadow:none;background:transparent;padding:0;overflow:visible;}
+  .pb-cgrid__filters-head,.pb-cgrid__toggle{display:none;}
+  .pb-cgrid__products{grid-template-columns:repeat(3,1fr);}
+}
+@media(min-width:1280px){.pb-cgrid__products{grid-template-columns:repeat(4,1fr);}}
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "PB · Collection Grid",
+  "tag": "section",
+  "settings": [
+    { "type": "range", "id": "per_page", "min": 8, "max": 48, "step": 4, "label": "Products per page", "default": 24 },
+    { "type": "checkbox", "id": "show_filters", "label": "Show filters (native)", "default": true },
+    { "type": "checkbox", "id": "show_sort", "label": "Show sorting", "default": true },
+    { "type": "checkbox", "id": "quick_add", "label": "Enable quick add", "default": true },
+    { "type": "color", "id": "bg", "label": "Background", "default": "#F5F1E8" }
+  ],
+  "enabled_on": { "templates": ["collection"] },
+  "presets": [ { "name": "PB · Collection Grid" } ]
+}
+{% endschema %}

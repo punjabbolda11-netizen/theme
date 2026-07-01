@@ -1,0 +1,243 @@
+{%- comment -%}
+  Punjab Bolda · Cart
+  Native cart form (posts to routes.cart_url, native checkout). AJAX line updates
+  via /cart/change.js are progressive enhancement; the form works without JS.
+{%- endcomment -%}
+{%- liquid
+  assign s = section.settings
+  assign threshold = s.free_ship_threshold | times: 100
+  assign remaining = threshold | minus: cart.total_price
+-%}
+<section class="pb pb-section pb-cart" style="background:{{ s.bg }};" data-pb-cart data-threshold="{{ threshold }}" data-currency="{{ cart.currency.iso_code }}">
+  <div class="pb-wrap">
+    <header class="pb-cart__head">
+      {%- if s.eyebrow != blank -%}<p class="pb-eyebrow">{{ s.eyebrow }}</p>{%- endif -%}
+      <h1 class="pb-h2">{{ s.heading | default: 'Your bag' }} <span class="pb-cart__count" data-pb-cart-itemcount>({{ cart.item_count }})</span></h1>
+    </header>
+
+    {%- if cart.item_count > 0 -%}
+      {%- comment -%} Free shipping progress {%- endcomment -%}
+      {%- if s.show_free_ship -%}
+        <div class="pb-cart__ship" data-pb-ship>
+          <p class="pb-cart__ship-msg" data-pb-ship-msg>
+            {%- if remaining > 0 -%}You’re <strong>{{ remaining | money }}</strong> away from free shipping.
+            {%- else -%}🎉 You’ve unlocked <strong>free shipping</strong>.{%- endif -%}
+          </p>
+          <div class="pb-cart__ship-track"><span class="pb-cart__ship-fill" data-pb-ship-fill style="width:{% if cart.total_price >= threshold %}100{% else %}{{ cart.total_price | times: 100 | divided_by: threshold }}{% endif %}%"></span></div>
+        </div>
+      {%- endif -%}
+
+      <form action="{{ routes.cart_url }}" method="post" id="cart" class="pb-cart__layout" novalidate>
+        <div class="pb-cart__items" data-pb-cart-items>
+          {%- for item in cart.items -%}
+            <div class="pb-cart__item" data-pb-line data-key="{{ item.key }}">
+              <a class="pb-cart__thumb pb-media" href="{{ item.url }}">
+                {%- if item.image -%}<img src="{{ item.image | image_url: width: 200 }}" width="90" height="112" alt="{{ item.product.title | escape }}" loading="lazy">{%- else -%}{{ 'product-1' | placeholder_svg_tag }}{%- endif -%}
+              </a>
+              <div class="pb-cart__detail">
+                <div class="pb-cart__top">
+                  <div>
+                    {%- if item.product.type != blank -%}<p class="pb-cart__type">{{ item.product.type }}</p>{%- endif -%}
+                    <h2 class="pb-cart__name"><a href="{{ item.url }}">{{ item.product.title }}</a></h2>
+                    {%- unless item.product.has_only_default_variant -%}<p class="pb-cart__variant">{{ item.variant.title }}</p>{%- endunless -%}
+                    {%- if item.selling_plan_allocation -%}<p class="pb-cart__variant">{{ item.selling_plan_allocation.selling_plan.name }}</p>{%- endif -%}
+                    {%- for prop in item.properties -%}{%- if prop.last != blank and prop.first != '_' -%}<p class="pb-cart__variant">{{ prop.first }}: {{ prop.last }}</p>{%- endif -%}{%- endfor -%}
+                  </div>
+                  <button type="button" class="pb-cart__remove" data-pb-remove aria-label="Remove {{ item.product.title | escape }}">{% render 'pb-icon', icon: 'close' %}</button>
+                </div>
+                <div class="pb-cart__bottom">
+                  <div class="pb-qty pb-qty--sm" data-pb-line-qty>
+                    <button type="button" class="pb-qty__btn" data-pb-line-dec aria-label="Decrease">{% render 'pb-icon', icon: 'minus' %}</button>
+                    <input type="number" class="pb-qty__input" name="updates[]" value="{{ item.quantity }}" min="0" inputmode="numeric" aria-label="Quantity for {{ item.product.title | escape }}" data-pb-line-input>
+                    <button type="button" class="pb-qty__btn" data-pb-line-inc aria-label="Increase">{% render 'pb-icon', icon: 'plus' %}</button>
+                  </div>
+                  <div class="pb-cart__prices">
+                    {%- if item.original_line_price != item.final_line_price -%}
+                      <span class="pb-cart__lineprice" data-pb-line-price>{{ item.final_line_price | money }}</span>
+                      <s class="pb-cart__linewas">{{ item.original_line_price | money }}</s>
+                    {%- else -%}
+                      <span class="pb-cart__lineprice" data-pb-line-price>{{ item.final_line_price | money }}</span>
+                    {%- endif -%}
+                  </div>
+                </div>
+                {%- if item.line_level_discount_allocations.size > 0 -%}
+                  <ul class="pb-cart__discounts">
+                    {%- for d in item.line_level_discount_allocations -%}<li>{% render 'pb-icon', icon: 'check' %} {{ d.discount_application.title }} (−{{ d.amount | money }})</li>{%- endfor -%}
+                  </ul>
+                {%- endif -%}
+              </div>
+            </div>
+          {%- endfor -%}
+        </div>
+
+        <aside class="pb-cart__summary">
+          <div class="pb-cart__summary-inner">
+            <h2 class="pb-cart__summary-title">Summary</h2>
+            <div class="pb-cart__row"><span>Subtotal</span><span data-pb-subtotal>{{ cart.total_price | money }}</span></div>
+            {%- if cart.cart_level_discount_applications.size > 0 -%}
+              {%- for d in cart.cart_level_discount_applications -%}
+                <div class="pb-cart__row pb-cart__row--disc"><span>{{ d.title }}</span><span>−{{ d.total_allocated_amount | money }}</span></div>
+              {%- endfor -%}
+            {%- endif -%}
+            <p class="pb-cart__taxnote">Taxes and shipping calculated at checkout.</p>
+
+            {%- if s.show_note -%}
+              <details class="pb-cart__note">
+                <summary>Add order note {% render 'pb-icon', icon: 'chevron' %}</summary>
+                <textarea name="note" placeholder="Notes for your order…" aria-label="Order note">{{ cart.note }}</textarea>
+              </details>
+            {%- endif -%}
+
+            <button type="submit" name="checkout" class="pb-btn pb-cart__checkout">{{ s.checkout_label | default: 'Checkout' }}</button>
+            {%- if additional_checkout_buttons -%}<div class="pb-cart__dynamic">{{ content_for_additional_checkout_buttons }}</div>{%- endif -%}
+            <a class="pb-cart__continue" href="{{ s.continue_link | default: routes.all_products_collection_url }}">{{ s.continue_label | default: 'Continue shopping' }}</a>
+
+            {%- if s.trust_text != blank -%}
+              <ul class="pb-cart__trust">
+                {%- assign rows = s.trust_text | newline_to_br | split: '<br />' -%}
+                {%- for row in rows -%}{%- if row != blank -%}<li>{% render 'pb-icon', icon: 'check' %} {{ row | strip }}</li>{%- endif -%}{%- endfor -%}
+              </ul>
+            {%- endif -%}
+          </div>
+        </aside>
+      </form>
+    {%- else -%}
+      <div class="pb-cart__empty">
+        <p class="pb-h3">{{ s.empty_heading | default: 'Your bag is empty.' }}</p>
+        <p class="pb-lead">{{ s.empty_text | default: 'Time to rep your roots. Explore the latest drops.' }}</p>
+        <div class="pb-actions pb-actions--center pb-mt-2">
+          <a class="pb-btn pb-btn--gold" href="{{ s.empty_link | default: routes.all_products_collection_url }}">{{ s.empty_label | default: 'Start shopping' }}</a>
+        </div>
+      </div>
+    {%- endif -%}
+  </div>
+</section>
+
+<script>
+(function(){
+  var root=document.querySelector('[data-pb-cart]');
+  if(!root)return;
+  var threshold=parseInt(root.dataset.threshold)||0;
+  var fmt={{ shop.money_format | json }};
+  function money(c){var v=(c/100).toFixed(2);return fmt.replace(/\{\{\s*amount\s*\}\}/,v).replace(/\{\{\s*amount_no_decimals\s*\}\}/,Math.round(c/100)).replace(/\{\{.*?\}\}/,v);}
+
+  function setBusy(line,on){line.style.opacity=on?'.5':'';line.style.pointerEvents=on?'none':'';}
+
+  function updateTotals(cart){
+    var sub=root.querySelector('[data-pb-subtotal]');if(sub)sub.textContent=money(cart.total_price);
+    root.querySelectorAll('[data-pb-cart-itemcount]').forEach(function(e){e.textContent='('+cart.item_count+')';});
+    document.dispatchEvent(new CustomEvent('pb:cart:updated',{detail:cart}));
+    // Free shipping
+    var msg=root.querySelector('[data-pb-ship-msg]'),fill=root.querySelector('[data-pb-ship-fill]');
+    if(threshold>0&&msg&&fill){
+      var rem=threshold-cart.total_price;
+      if(rem>0){msg.innerHTML='You’re <strong>'+money(rem)+'</strong> away from free shipping.';fill.style.width=Math.min(100,cart.total_price*100/threshold)+'%';}
+      else{msg.innerHTML='🎉 You’ve unlocked <strong>free shipping</strong>.';fill.style.width='100%';}
+    }
+    if(cart.item_count===0)window.location.reload();
+  }
+
+  function change(key,qty,line){
+    setBusy(line,true);
+    fetch('/cart/change.js',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({id:key,quantity:qty})})
+      .then(function(r){return r.json();})
+      .then(function(cart){
+        if(qty===0){line.remove();}
+        else{
+          var item=cart.items.find(function(i){return i.key===key;});
+          if(item){var lp=line.querySelector('[data-pb-line-price]');if(lp)lp.textContent=money(item.final_line_price);var inp=line.querySelector('[data-pb-line-input]');if(inp)inp.value=item.quantity;}
+        }
+        updateTotals(cart);
+        setBusy(line,false);
+      })
+      .catch(function(){setBusy(line,false);root.querySelector('#cart').submit();});
+  }
+
+  root.querySelectorAll('[data-pb-line]').forEach(function(line){
+    var key=line.dataset.key,input=line.querySelector('[data-pb-line-input]');
+    line.querySelector('[data-pb-line-dec]').addEventListener('click',function(){var q=Math.max(0,(parseInt(input.value)||1)-1);change(key,q,line);});
+    line.querySelector('[data-pb-line-inc]').addEventListener('click',function(){var q=(parseInt(input.value)||1)+1;change(key,q,line);});
+    input.addEventListener('change',function(){var q=Math.max(0,parseInt(input.value)||0);change(key,q,line);});
+    line.querySelector('[data-pb-remove]').addEventListener('click',function(){change(key,0,line);});
+  });
+})();
+</script>
+
+{% stylesheet %}
+.pb-cart__head{margin-bottom:1.6rem;}
+.pb-cart__count{color:var(--pb-muted);font-weight:400;}
+.pb-cart__ship{background:var(--pb-card);border:1px solid var(--pb-line);border-radius:var(--pb-radius-lg);padding:1rem 1.2rem;margin-bottom:1.6rem;}
+.pb-cart__ship-msg{margin:0 0 .6rem;font-size:.86rem;}
+.pb-cart__ship-track{height:6px;border-radius:6px;background:var(--pb-bg-secondary);overflow:hidden;}
+.pb-cart__ship-fill{display:block;height:100%;background:var(--pb-gold);transition:width .5s var(--pb-ease);}
+.pb-cart__layout{display:grid;grid-template-columns:1fr;gap:2rem;align-items:start;}
+.pb-cart__items{display:flex;flex-direction:column;}
+.pb-cart__item{display:flex;gap:1rem;padding:1.4rem 0;border-bottom:1px solid var(--pb-line);transition:opacity .25s;}
+.pb-cart__item:first-child{padding-top:0;}
+.pb-cart__thumb{flex:0 0 90px;aspect-ratio:4/5;border-radius:var(--pb-radius);overflow:hidden;}
+.pb-cart__thumb img{width:100%;height:100%;object-fit:cover;}
+.pb-cart__detail{flex:1;min-width:0;display:flex;flex-direction:column;}
+.pb-cart__top{display:flex;justify-content:space-between;gap:1rem;}
+.pb-cart__type{font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;color:var(--pb-gold);font-weight:600;margin:0 0 .2rem;}
+.pb-cart__name{font-family:var(--pb-font-heading);font-size:1.05rem;font-weight:600;margin:0;line-height:1.2;}
+.pb-cart__name a{color:inherit;text-decoration:none;}
+.pb-cart__variant{font-size:.8rem;color:var(--pb-muted);margin:.25rem 0 0;}
+.pb-cart__remove{background:none;border:0;cursor:pointer;color:var(--pb-muted);height:fit-content;padding:.2rem;transition:color .25s;}
+.pb-cart__remove:hover{color:var(--pb-text);}
+.pb-cart__bottom{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-top:auto;padding-top:.8rem;}
+.pb-qty--sm .pb-qty__btn{width:38px;height:42px;}
+.pb-qty--sm .pb-qty__input{width:38px;height:42px;}
+.pb-cart__prices{display:flex;flex-direction:column;align-items:flex-end;}
+.pb-cart__lineprice{font-weight:600;}
+.pb-cart__linewas{color:var(--pb-muted);font-size:.82rem;}
+.pb-cart__discounts{list-style:none;margin:.5rem 0 0;padding:0;}
+.pb-cart__discounts li{font-size:.76rem;color:var(--pb-gold);display:flex;align-items:center;gap:.3rem;}
+.pb-cart__summary-inner{background:var(--pb-card);border:1px solid var(--pb-line);border-radius:var(--pb-radius-lg);padding:1.6rem;}
+.pb-cart__summary-title{font-family:var(--pb-font-heading);font-size:1.2rem;margin:0 0 1.2rem;}
+.pb-cart__row{display:flex;justify-content:space-between;font-size:.95rem;margin-bottom:.7rem;}
+.pb-cart__row--disc{color:var(--pb-gold);}
+.pb-cart__taxnote{font-size:.76rem;color:var(--pb-muted);margin:.4rem 0 1.2rem;}
+.pb-cart__note{margin-bottom:1.2rem;border-top:1px solid var(--pb-line);border-bottom:1px solid var(--pb-line);}
+.pb-cart__note summary{display:flex;align-items:center;justify-content:space-between;padding:.9rem 0;cursor:pointer;list-style:none;font-size:.85rem;font-weight:600;}
+.pb-cart__note summary::-webkit-details-marker{display:none;}
+.pb-cart__note textarea{width:100%;border:1px solid var(--pb-line-strong);border-radius:var(--pb-radius);padding:.8rem;font-family:var(--pb-font-body);font-size:.9rem;margin-bottom:.9rem;min-height:80px;}
+.pb-cart__checkout{width:100%;background:var(--pb-text);color:#fff;border-color:var(--pb-text);}
+.pb-cart__checkout:hover{background:var(--pb-gold);border-color:var(--pb-gold);color:#1a1407;}
+.pb-cart__dynamic{margin-top:.7rem;}
+.pb-cart__continue{display:block;text-align:center;margin-top:1rem;font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;color:var(--pb-muted);text-decoration:none;}
+.pb-cart__continue:hover{color:var(--pb-text);}
+.pb-cart__trust{list-style:none;margin:1.4rem 0 0;padding:1.2rem 0 0;border-top:1px solid var(--pb-line);display:grid;gap:.6rem;}
+.pb-cart__trust li{display:flex;align-items:center;gap:.5rem;font-size:.8rem;color:var(--pb-muted);}
+.pb-cart__trust svg{color:var(--pb-gold);}
+.pb-cart__empty{text-align:center;padding:4rem 1rem;}
+.pb-cart__empty .pb-lead{margin-inline:auto;}
+@media(min-width:850px){.pb-cart__layout{grid-template-columns:1.6fr 1fr;gap:3rem;}.pb-cart__summary{position:sticky;top:90px;}}
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "PB · Cart",
+  "tag": "section",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "YOUR SELECTION" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Your bag" },
+    { "type": "header", "content": "Free shipping bar" },
+    { "type": "checkbox", "id": "show_free_ship", "label": "Show free shipping progress", "default": true },
+    { "type": "number", "id": "free_ship_threshold", "label": "Free shipping threshold (in store currency)", "default": 120 },
+    { "type": "header", "content": "Options" },
+    { "type": "checkbox", "id": "show_note", "label": "Allow order note", "default": true },
+    { "type": "text", "id": "checkout_label", "label": "Checkout button", "default": "Checkout" },
+    { "type": "text", "id": "continue_label", "label": "Continue shopping label", "default": "Continue shopping" },
+    { "type": "url", "id": "continue_link", "label": "Continue shopping link" },
+    { "type": "textarea", "id": "trust_text", "label": "Trust points (one per line)", "default": "Secure encrypted checkout\n30-day easy returns\nShips worldwide" },
+    { "type": "header", "content": "Empty state" },
+    { "type": "text", "id": "empty_heading", "label": "Empty heading", "default": "Your bag is empty." },
+    { "type": "text", "id": "empty_text", "label": "Empty text", "default": "Time to rep your roots. Explore the latest drops." },
+    { "type": "text", "id": "empty_label", "label": "Empty button label", "default": "Start shopping" },
+    { "type": "url", "id": "empty_link", "label": "Empty button link" },
+    { "type": "color", "id": "bg", "label": "Background", "default": "#F5F1E8" }
+  ],
+  "enabled_on": { "templates": ["cart"] },
+  "presets": [ { "name": "PB · Cart" } ]
+}
+{% endschema %}

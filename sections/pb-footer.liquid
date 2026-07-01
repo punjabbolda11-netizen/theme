@@ -1,0 +1,104 @@
+{%- comment -%} Punjab Bolda · Premium Footer {%- endcomment -%}
+{%- liquid assign s = section.settings -%}
+<footer class="pb pb-footer" style="background:{{ s.bg }};color:{{ s.fg }};">
+  <div class="pb-wrap pb-footer__top">
+    <div class="pb-footer__brand">
+      {%- if s.logo != blank -%}
+        <img class="pb-footer__logo" src="{{ s.logo | image_url: width: 360 }}" width="180" height="auto" alt="{{ shop.name | escape }}" loading="lazy">
+      {%- else -%}
+        <span class="pb-footer__wordmark">{{ s.brand | default: shop.name }}</span>
+      {%- endif -%}
+      {%- if s.tagline != blank -%}<p class="pb-footer__tagline">{{ s.tagline }}</p>{%- endif -%}
+      {%- if s.show_social -%}
+        <ul class="pb-footer__social">
+          {%- if s.instagram != blank -%}<li><a href="{{ s.instagram }}" aria-label="Instagram" rel="noopener" target="_blank">Instagram</a></li>{%- endif -%}
+          {%- if s.tiktok != blank -%}<li><a href="{{ s.tiktok }}" aria-label="TikTok" rel="noopener" target="_blank">TikTok</a></li>{%- endif -%}
+          {%- if s.youtube != blank -%}<li><a href="{{ s.youtube }}" aria-label="YouTube" rel="noopener" target="_blank">YouTube</a></li>{%- endif -%}
+          {%- if s.facebook != blank -%}<li><a href="{{ s.facebook }}" aria-label="Facebook" rel="noopener" target="_blank">Facebook</a></li>{%- endif -%}
+        </ul>
+      {%- endif -%}
+    </div>
+
+    <nav class="pb-footer__cols" aria-label="Footer">
+      {%- for block in section.blocks -%}
+        {%- if block.type == 'menu' -%}
+          <div class="pb-footer__col" {{ block.shopify_attributes }}>
+            <h3 class="pb-footer__heading">{{ block.settings.title }}</h3>
+            {%- if block.settings.menu != blank -%}
+              <ul>
+                {%- for link in linklists[block.settings.menu].links -%}
+                  <li><a href="{{ link.url }}">{{ link.title }}</a></li>
+                {%- endfor -%}
+              </ul>
+            {%- endif -%}
+          </div>
+        {%- endif -%}
+      {%- endfor -%}
+    </nav>
+  </div>
+
+  <div class="pb-wrap pb-footer__bottom">
+    <p class="pb-footer__copy">© {{ 'now' | date: '%Y' }} {{ s.brand | default: shop.name }}. {{ s.rights | default: 'All rights reserved.' }}</p>
+    {%- if s.payment_note != blank -%}<p class="pb-footer__pay">{{ s.payment_note }}</p>{%- endif -%}
+  </div>
+</footer>
+
+{% stylesheet %}
+.pb-footer{padding-top:clamp(3rem,7vw,5rem);}
+.pb-footer__top{display:grid;grid-template-columns:1fr;gap:clamp(2rem,5vw,3.5rem);padding-bottom:clamp(2.5rem,5vw,4rem);}
+.pb-footer__wordmark{font-family:var(--pb-font-heading);font-size:1.8rem;font-weight:700;letter-spacing:.02em;}
+.pb-footer__logo{max-width:180px;height:auto;}
+.pb-footer__tagline{margin:1rem 0 0;font-size:.78rem;letter-spacing:.18em;text-transform:uppercase;opacity:.7;max-width:34ch;line-height:1.6;}
+.pb-footer__social{list-style:none;display:flex;flex-wrap:wrap;gap:1.2rem;margin:1.6rem 0 0;padding:0;}
+.pb-footer__social a{color:inherit;text-decoration:none;font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;opacity:.8;border-bottom:1px solid transparent;padding-bottom:2px;transition:opacity .3s,border-color .3s;}
+.pb-footer__social a:hover{opacity:1;border-color:var(--pb-gold);}
+.pb-footer__cols{display:grid;grid-template-columns:repeat(2,1fr);gap:2rem 1rem;}
+.pb-footer__heading{font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;font-weight:700;color:var(--pb-gold);margin:0 0 1.1rem;}
+.pb-footer__col ul{list-style:none;margin:0;padding:0;display:grid;gap:.7rem;}
+.pb-footer__col a{color:inherit;text-decoration:none;font-size:.9rem;opacity:.82;transition:opacity .3s;}
+.pb-footer__col a:hover{opacity:1;text-decoration:underline;text-underline-offset:3px;}
+.pb-footer__bottom{display:flex;flex-direction:column;gap:.6rem;padding:1.6rem 0 2.4rem;border-top:1px solid rgba(255,255,255,.12);}
+.pb-footer__copy,.pb-footer__pay{margin:0;font-size:.74rem;opacity:.6;}
+@media(min-width:750px){
+  .pb-footer__top{grid-template-columns:1.2fr 2fr;}
+  .pb-footer__cols{grid-template-columns:repeat(4,1fr);}
+  .pb-footer__bottom{flex-direction:row;justify-content:space-between;align-items:center;}
+}
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "PB · Footer",
+  "tag": "footer",
+  "settings": [
+    { "type": "image_picker", "id": "logo", "label": "Logo (optional)" },
+    { "type": "text", "id": "brand", "label": "Brand name", "default": "Punjab Bolda" },
+    { "type": "text", "id": "tagline", "label": "Tagline", "default": "Rooted in culture. Driven by pride." },
+    { "type": "header", "content": "Social" },
+    { "type": "checkbox", "id": "show_social", "label": "Show social links", "default": true },
+    { "type": "url", "id": "instagram", "label": "Instagram" },
+    { "type": "url", "id": "tiktok", "label": "TikTok" },
+    { "type": "url", "id": "youtube", "label": "YouTube" },
+    { "type": "url", "id": "facebook", "label": "Facebook" },
+    { "type": "header", "content": "Bottom bar" },
+    { "type": "text", "id": "rights", "label": "Rights text", "default": "All rights reserved." },
+    { "type": "text", "id": "payment_note", "label": "Payment note", "default": "Secure checkout · Visa · Mastercard · Amex · Apple Pay" },
+    { "type": "header", "content": "Colours" },
+    { "type": "color", "id": "bg", "label": "Background", "default": "#111111" },
+    { "type": "color", "id": "fg", "label": "Text", "default": "#F5F1E8" }
+  ],
+  "blocks": [
+    { "type": "menu", "name": "Menu column", "settings": [
+      { "type": "text", "id": "title", "label": "Heading", "default": "Shop" },
+      { "type": "link_list", "id": "menu", "label": "Menu" }
+    ] }
+  ],
+  "max_blocks": 4,
+  "presets": [ { "name": "PB · Footer", "blocks": [
+    { "type": "menu", "settings": { "title": "Shop" } },
+    { "type": "menu", "settings": { "title": "Collections" } },
+    { "type": "menu", "settings": { "title": "About" } },
+    { "type": "menu", "settings": { "title": "Help" } }
+  ] } ]
+}
+{% endschema %}

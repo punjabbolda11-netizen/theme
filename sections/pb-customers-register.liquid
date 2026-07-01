@@ -1,0 +1,46 @@
+{%- comment -%} Punjab Bolda · Customer Register — native create_customer {%- endcomment -%}
+{%- liquid assign s = section.settings -%}
+<section class="pb pb-auth" style="background:{{ s.bg }};">
+  <div class="pb-wrap" style="display:grid;place-items:center;">
+    <div class="pb-auth__card">
+      <div class="pb-auth__head">
+        {%- if s.eyebrow != blank -%}<p class="pb-eyebrow pb-eyebrow--center">{{ s.eyebrow }}</p>{%- endif -%}
+        <h1 class="pb-auth__title">{{ s.heading | default: 'Create account' }}</h1>
+        {%- if s.subheading != blank -%}<p class="pb-auth__sub">{{ s.subheading }}</p>{%- endif -%}
+      </div>
+
+      {%- form 'create_customer', novalidate: 'novalidate' -%}
+        {%- if form.errors -%}<div class="pb-auth__errors" role="alert">{{ form.errors | default_errors }}</div>{%- endif -%}
+        <div class="pb-field"><label for="pb-reg-first">First name</label><input type="text" id="pb-reg-first" name="customer[first_name]" autocomplete="given-name"></div>
+        <div class="pb-field"><label for="pb-reg-last">Last name</label><input type="text" id="pb-reg-last" name="customer[last_name]" autocomplete="family-name"></div>
+        <div class="pb-field"><label for="pb-reg-email">Email</label><input type="email" id="pb-reg-email" name="customer[email]" autocomplete="email" required></div>
+        <div class="pb-field"><label for="pb-reg-pass">Password</label><input type="password" id="pb-reg-pass" name="customer[password]" autocomplete="new-password" required></div>
+        {%- if s.show_marketing -%}
+          <label style="display:flex;gap:.6rem;align-items:flex-start;font-size:.84rem;color:var(--pb-muted);margin-bottom:1rem;">
+            <input type="checkbox" name="customer[accepts_marketing]" value="true" style="margin-top:3px;width:auto;min-height:auto;">
+            <span>Email me about new drops and exclusive releases.</span>
+          </label>
+        {%- endif -%}
+        <button type="submit" class="pb-btn pb-auth__btn">{{ s.btn_label | default: 'Create account' }}</button>
+      {%- endform -%}
+
+      <p class="pb-auth__alt">Already have an account? <a href="{{ routes.account_login_url }}">Sign in</a></p>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "PB · Register",
+  "tag": "section",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "JOIN THE MOVEMENT" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Create account" },
+    { "type": "text", "id": "subheading", "label": "Subheading", "default": "Faster checkout, order tracking and early access." },
+    { "type": "text", "id": "btn_label", "label": "Button", "default": "Create account" },
+    { "type": "checkbox", "id": "show_marketing", "label": "Show marketing opt-in", "default": true },
+    { "type": "color", "id": "bg", "label": "Background", "default": "#EEE1D3" }
+  ],
+  "presets": [ { "name": "PB · Register" } ]
+}
+{% endschema %}

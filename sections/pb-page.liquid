@@ -1,0 +1,61 @@
+{%- comment -%} Punjab Bolda · Page — editorial page header + native page content {%- endcomment -%}
+{%- liquid assign s = section.settings -%}
+<section class="pb pb-page" style="background:{{ s.bg }};">
+  <header class="pb-page__hero{% if s.image != blank %} has-image{% endif %}"
+          style="{% if s.image != blank %}--pb-pg-overlay:{{ s.overlay | divided_by: 100.0 }};{% endif %}">
+    {%- if s.image != blank -%}
+      <div class="pb-page__hero-media" aria-hidden="true">
+        <img src="{{ s.image | image_url: width: 2000 }}" srcset="{{ s.image | image_url: width: 900 }} 900w, {{ s.image | image_url: width: 1600 }} 1600w" sizes="100vw" width="{{ s.image.width }}" height="{{ s.image.height }}" alt="" fetchpriority="high">
+      </div>
+    {%- endif -%}
+    <div class="pb-wrap pb-page__hero-inner">
+      {%- if s.show_breadcrumb -%}{% render 'pb-breadcrumbs' %}{%- endif -%}
+      {%- if s.eyebrow != blank -%}<p class="pb-eyebrow"{% if s.image != blank %} style="color:var(--pb-gold)"{% endif %}>{{ s.eyebrow }}</p>{%- endif -%}
+      <h1 class="pb-page__title">{{ s.title | default: page.title }}</h1>
+      {%- if s.subtitle != blank -%}<p class="pb-page__sub">{{ s.subtitle }}</p>{%- endif -%}
+    </div>
+  </header>
+
+  {%- if page.content != blank -%}
+    <div class="pb-wrap pb-page__body rte">{{ page.content }}</div>
+  {%- endif -%}
+</section>
+
+{% stylesheet %}
+.pb-page__hero{padding-block:clamp(2.5rem,6vw,5rem);text-align:center;}
+.pb-page__hero.has-image{position:relative;color:#fff;padding-block:clamp(4rem,12vw,9rem);overflow:hidden;isolation:isolate;}
+.pb-page__hero-media{position:absolute;inset:0;z-index:-1;}
+.pb-page__hero-media::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,calc(var(--pb-pg-overlay,.4)*.7)),rgba(0,0,0,var(--pb-pg-overlay,.4)));}
+.pb-page__hero-media img{width:100%;height:100%;object-fit:cover;}
+.pb-page__hero-inner{max-width:760px;margin-inline:auto;}
+.pb-page__hero .pb-eyebrow{justify-content:center;}
+.pb-page__title{font-family:var(--pb-font-heading);font-size:var(--pb-h1);line-height:1.02;font-weight:600;letter-spacing:-.02em;margin:.4rem 0 0;text-wrap:balance;}
+.pb-page__sub{margin:1rem auto 0;font-size:var(--pb-body);line-height:1.6;opacity:.85;max-width:52ch;}
+.pb-page__body{max-width:760px;margin-inline:auto;padding-block:clamp(2.5rem,6vw,4rem);font-size:1.05rem;line-height:1.8;color:var(--pb-text);}
+.pb-page__body p{margin:0 0 1.4rem;}
+.pb-page__body h2{font-family:var(--pb-font-heading);font-size:clamp(1.4rem,3vw,1.9rem);margin:2.2rem 0 .9rem;}
+.pb-page__body h3{font-family:var(--pb-font-heading);font-size:1.25rem;margin:1.8rem 0 .7rem;}
+.pb-page__body ul,.pb-page__body ol{margin:0 0 1.4rem;padding-left:1.3rem;}
+.pb-page__body li{margin-bottom:.5rem;}
+.pb-page__body img{max-width:100%;height:auto;border-radius:var(--pb-radius-lg);margin:1.5rem 0;}
+.pb-page__body a{color:var(--pb-text);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--pb-gold);}
+.pb-page__body blockquote{border-left:3px solid var(--pb-gold);margin:2rem 0;padding-left:1.5rem;font-family:var(--pb-font-heading);font-size:1.3rem;font-style:italic;}
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "PB · Page",
+  "tag": "section",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow" },
+    { "type": "text", "id": "title", "label": "Title (blank = page title)" },
+    { "type": "text", "id": "subtitle", "label": "Subtitle" },
+    { "type": "image_picker", "id": "image", "label": "Hero image (optional)" },
+    { "type": "range", "id": "overlay", "min": 0, "max": 80, "step": 5, "unit": "%", "label": "Image darkening", "default": 40 },
+    { "type": "checkbox", "id": "show_breadcrumb", "label": "Show breadcrumb", "default": true },
+    { "type": "color", "id": "bg", "label": "Background", "default": "#F5F1E8" }
+  ],
+  "enabled_on": { "templates": ["page"] },
+  "presets": [ { "name": "PB · Page" } ]
+}
+{% endschema %}

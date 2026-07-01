@@ -1,0 +1,53 @@
+{%- comment -%} Punjab Bolda · USP / Trust bar {%- endcomment -%}
+{%- liquid assign s = section.settings -%}
+<section class="pb pb-usp" style="background:{{ s.bg }};color:{{ s.fg }};border-top:1px solid var(--pb-line);border-bottom:1px solid var(--pb-line);">
+  <div class="pb-wrap pb-usp__grid">
+    {%- for block in section.blocks -%}
+      <div class="pb-usp__item pb-reveal" {{ block.shopify_attributes }} data-pb-stagger>
+        {%- if block.settings.icon != 'none' -%}<span class="pb-usp__icon">{% render 'pb-usp-icon', icon: block.settings.icon %}</span>{%- endif -%}
+        <div class="pb-usp__txt">
+          <span class="pb-usp__t">{{ block.settings.title }}</span>
+          {%- if block.settings.text != blank -%}<span class="pb-usp__d">{{ block.settings.text }}</span>{%- endif -%}
+        </div>
+      </div>
+    {%- endfor -%}
+  </div>
+</section>
+
+{% stylesheet %}
+.pb-usp__grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1.4rem 1rem;padding-block:clamp(1.6rem,3vw,2.2rem);}
+.pb-usp__item{display:flex;align-items:center;gap:.75rem;}
+.pb-usp__icon{flex:0 0 auto;color:var(--pb-gold);display:grid;place-items:center;}
+.pb-usp__txt{display:flex;flex-direction:column;line-height:1.3;}
+.pb-usp__t{font-size:.84rem;font-weight:600;}
+.pb-usp__d{font-size:.74rem;color:var(--pb-muted);}
+@media(min-width:750px){.pb-usp__grid{grid-template-columns:repeat(4,1fr);text-align:left;}}
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "PB · Trust Bar",
+  "tag": "section",
+  "settings": [
+    { "type": "color", "id": "bg", "label": "Background", "default": "#FFFFFF" },
+    { "type": "color", "id": "fg", "label": "Text", "default": "#111111" }
+  ],
+  "blocks": [
+    { "type": "usp", "name": "USP", "settings": [
+      { "type": "select", "id": "icon", "label": "Icon", "options": [
+        { "value": "ship", "label": "Shipping" }, { "value": "return", "label": "Returns" },
+        { "value": "secure", "label": "Secure" }, { "value": "globe", "label": "Worldwide" },
+        { "value": "none", "label": "None" } ], "default": "ship" },
+      { "type": "text", "id": "title", "label": "Title", "default": "Free shipping" },
+      { "type": "text", "id": "text", "label": "Subtext", "default": "On orders over $120" }
+    ] }
+  ],
+  "max_blocks": 4,
+  "presets": [ { "name": "PB · Trust Bar", "blocks": [
+    { "type": "usp", "settings": { "icon": "ship", "title": "Free shipping", "text": "On orders over $120" } },
+    { "type": "usp", "settings": { "icon": "return", "title": "Easy returns", "text": "30-day returns" } },
+    { "type": "usp", "settings": { "icon": "globe", "title": "Ships worldwide", "text": "USA · CA · UK · AU" } },
+    { "type": "usp", "settings": { "icon": "secure", "title": "Secure checkout", "text": "Encrypted & safe" } }
+  ] } ]
+}
+{% endschema %}

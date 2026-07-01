@@ -1,0 +1,92 @@
+{%- comment -%} Punjab Bolda · Jila Spotlight — district storytelling, dark luxury {%- endcomment -%}
+{%- liquid assign s = section.settings -%}
+<section class="pb pb-section pb-jila" style="background:{{ s.bg }};color:{{ s.fg }};">
+  <div class="pb-wrap">
+    <header class="pb-jila__head pb-reveal">
+      {%- if s.eyebrow != blank -%}<p class="pb-eyebrow" style="color:var(--pb-gold)">{{ s.eyebrow }}</p>{%- endif -%}
+      {%- if s.heading != blank -%}<h2 class="pb-h2">{{ s.heading }}</h2>{%- endif -%}
+      {%- if s.intro != blank -%}<p class="pb-lead pb-mt-1" style="color:rgba(255,255,255,.7)">{{ s.intro }}</p>{%- endif -%}
+    </header>
+
+    <div class="pb-jila__grid">
+      {%- for block in section.blocks -%}
+        {%- liquid
+          assign img = block.settings.image
+          if img == blank and block.settings.collection != blank
+            assign img = block.settings.collection.featured_image
+          endif
+          assign url = block.settings.link
+          if url == blank and block.settings.collection != blank
+            assign url = block.settings.collection.url
+          endif
+        -%}
+        <a class="pb-jila__card pb-media pb-zoom pb-reveal" href="{{ url | default: '#' }}" {{ block.shopify_attributes }} data-pb-stagger>
+          {%- if img != blank -%}
+            <img src="{{ img | image_url: width: 700 }}" srcset="{{ img | image_url: width: 400 }} 400w, {{ img | image_url: width: 700 }} 700w"
+                 sizes="(min-width:750px) 30vw, 70vw" width="{{ img.width }}" height="{{ img.height }}"
+                 alt="{{ block.settings.district | escape }}" loading="lazy">
+          {%- else -%}{{ 'collection-2' | placeholder_svg_tag: 'pb-jila__ph' }}{%- endif -%}
+          <span class="pb-jila__veil"></span>
+          <span class="pb-jila__meta">
+            {%- if block.settings.number != blank -%}<span class="pb-jila__num">{{ block.settings.number }}</span>{%- endif -%}
+            <span class="pb-jila__name">{{ block.settings.district }}</span>
+            {%- if block.settings.tagline != blank -%}<span class="pb-jila__tag">{{ block.settings.tagline }}</span>{%- endif -%}
+          </span>
+        </a>
+      {%- endfor -%}
+    </div>
+
+    {%- if s.btn_label != blank -%}
+      <div class="pb-jila__foot pb-reveal"><a class="pb-btn pb-btn--gold" href="{{ s.btn_link | default: '#' }}">{{ s.btn_label }}</a></div>
+    {%- endif -%}
+  </div>
+</section>
+
+{% stylesheet %}
+.pb-jila__head{max-width:640px;margin-bottom:clamp(2rem,5vw,3.5rem);}
+.pb-jila__grid{display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(.8rem,2vw,1.4rem);}
+.pb-jila__card{position:relative;display:block;aspect-ratio:3/4;border-radius:var(--pb-radius-lg);overflow:hidden;color:#fff;text-decoration:none;}
+.pb-jila__card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:saturate(.9);}
+.pb-jila__veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.1) 30%,rgba(0,0,0,.78) 100%);}
+.pb-jila__meta{position:absolute;left:0;bottom:0;padding:clamp(1rem,2.5vw,1.6rem);display:flex;flex-direction:column;gap:.25rem;z-index:2;}
+.pb-jila__num{font-family:var(--pb-font-heading);font-size:.8rem;color:var(--pb-gold);letter-spacing:.1em;}
+.pb-jila__name{font-family:var(--pb-font-heading);font-size:clamp(1.2rem,2.4vw,1.7rem);font-weight:600;line-height:1;}
+.pb-jila__tag{font-size:.72rem;letter-spacing:.1em;color:rgba(255,255,255,.7);}
+.pb-jila__ph{position:absolute;inset:0;width:100%;height:100%;}
+.pb-jila__foot{margin-top:clamp(2rem,4vw,3rem);display:flex;justify-content:center;}
+@media(min-width:750px){.pb-jila__grid{grid-template-columns:repeat(3,1fr);}}
+@media(min-width:990px){.pb-jila__grid{grid-template-columns:repeat(4,1fr);}}
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "PB · Jila Spotlight",
+  "tag": "section",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "JILA COLLECTION" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Repping every district." },
+    { "type": "textarea", "id": "intro", "label": "Intro", "default": "From Amritsar to Ludhiana — a tribute to the districts that built us. Wear your jila with pride." },
+    { "type": "text", "id": "btn_label", "label": "Button label", "default": "Shop the Jila Collection" },
+    { "type": "url", "id": "btn_link", "label": "Button link" },
+    { "type": "color", "id": "bg", "label": "Background", "default": "#111111" },
+    { "type": "color", "id": "fg", "label": "Text", "default": "#FFFFFF" }
+  ],
+  "blocks": [
+    { "type": "district", "name": "District", "settings": [
+      { "type": "image_picker", "id": "image", "label": "Image" },
+      { "type": "collection", "id": "collection", "label": "Linked collection (optional)" },
+      { "type": "text", "id": "number", "label": "Number", "default": "01" },
+      { "type": "text", "id": "district", "label": "District", "default": "Amritsar" },
+      { "type": "text", "id": "tagline", "label": "Tagline", "default": "The holy city" },
+      { "type": "url", "id": "link", "label": "Custom link (optional)" }
+    ] }
+  ],
+  "max_blocks": 12,
+  "presets": [ { "name": "PB · Jila Spotlight", "blocks": [
+    { "type": "district", "settings": { "number": "01", "district": "Amritsar", "tagline": "The holy city" } },
+    { "type": "district", "settings": { "number": "02", "district": "Ludhiana", "tagline": "The manchester" } },
+    { "type": "district", "settings": { "number": "03", "district": "Jalandhar", "tagline": "Sports capital" } },
+    { "type": "district", "settings": { "number": "04", "district": "Patiala", "tagline": "Royal roots" } }
+  ] } ]
+}
+{% endschema %}

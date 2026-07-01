@@ -1,0 +1,99 @@
+{%- comment -%} Punjab Bolda · Blog Posts — editorial journal grid {%- endcomment -%}
+{%- assign s = section.settings -%}
+{%- paginate blog.articles by s.per_page -%}
+<section class="pb pb-section pb-blog" style="background:{{ s.bg }};">
+  <div class="pb-wrap">
+    <header class="pb-blog__head pb-reveal">
+      {%- if s.eyebrow != blank -%}<p class="pb-eyebrow">{{ s.eyebrow }}</p>{%- endif -%}
+      <h1 class="pb-h2">{{ s.heading | default: blog.title }}</h1>
+      {%- if s.intro != blank -%}<p class="pb-lead pb-mt-1">{{ s.intro }}</p>{%- endif -%}
+    </header>
+
+    {%- if blog.articles.size > 0 -%}
+      {%- if s.feature_first and paginate.current_page == 1 -%}
+        {%- assign feat = blog.articles.first -%}
+        <a class="pb-blog__feature pb-media pb-zoom pb-reveal" href="{{ feat.url }}">
+          {%- if feat.image -%}<img src="{{ feat.image | image_url: width: 1600 }}" sizes="(min-width:990px) 90vw, 100vw" width="{{ feat.image.width }}" height="{{ feat.image.height }}" alt="{{ feat.image.alt | escape | default: feat.title | escape }}" loading="lazy">{%- endif -%}
+          <span class="pb-blog__feature-veil"></span>
+          <span class="pb-blog__feature-cap">
+            {%- if feat.tags.size > 0 -%}<span class="pb-blog__tag">{{ feat.tags.first }}</span>{%- endif -%}
+            <span class="pb-blog__feature-title">{{ feat.title }}</span>
+            <span class="pb-blog__meta">{{ feat.published_at | date: '%B %d, %Y' }}{% if feat.author != blank %} · {{ feat.author }}{% endif %}</span>
+          </span>
+        </a>
+      {%- endif -%}
+
+      <div class="pb-blog__grid">
+        {%- for article in blog.articles -%}
+          {%- if s.feature_first and paginate.current_page == 1 and forloop.first -%}{%- continue -%}{%- endif -%}
+          <article class="pb-blog__card pb-reveal" data-pb-stagger>
+            <a class="pb-blog__card-media pb-media pb-zoom" href="{{ article.url }}">
+              {%- if article.image -%}<img src="{{ article.image | image_url: width: 800 }}" sizes="(min-width:750px) 33vw, 90vw" width="{{ article.image.width }}" height="{{ article.image.height }}" alt="{{ article.image.alt | escape | default: article.title | escape }}" loading="lazy">
+              {%- else -%}{{ 'image' | placeholder_svg_tag: 'pb-blog__ph' }}{%- endif -%}
+            </a>
+            <div class="pb-blog__card-body">
+              {%- if article.tags.size > 0 -%}<span class="pb-blog__kicker">{{ article.tags.first }}</span>{%- endif -%}
+              <h2 class="pb-blog__card-title"><a href="{{ article.url }}">{{ article.title }}</a></h2>
+              {%- if s.show_excerpt -%}<p class="pb-blog__excerpt">{{ article.excerpt_or_content | strip_html | truncatewords: 22 }}</p>{%- endif -%}
+              <span class="pb-blog__meta">{{ article.published_at | date: '%B %d, %Y' }}{% if s.show_author and article.author != blank %} · {{ article.author }}{% endif %}</span>
+            </div>
+          </article>
+        {%- endfor -%}
+      </div>
+
+      {%- if paginate.pages > 1 -%}
+        <nav class="pb-pagination" aria-label="Pagination">
+          {%- if paginate.previous -%}<a class="pb-pagination__arrow" href="{{ paginate.previous.url }}" aria-label="Previous">{% render 'pb-icon', icon: 'arrow-left' %}</a>{%- endif -%}
+          {%- for part in paginate.parts -%}
+            {%- if part.is_link -%}<a class="pb-pagination__num" href="{{ part.url }}">{{ part.title }}</a>
+            {%- elsif part.title == paginate.current_page -%}<span class="pb-pagination__num is-current" aria-current="page">{{ part.title }}</span>
+            {%- else -%}<span class="pb-pagination__gap">{{ part.title }}</span>{%- endif -%}
+          {%- endfor -%}
+          {%- if paginate.next -%}<a class="pb-pagination__arrow" href="{{ paginate.next.url }}" aria-label="Next">{% render 'pb-icon', icon: 'arrow-right' %}</a>{%- endif -%}
+        </nav>
+      {%- endif -%}
+    {%- else -%}
+      <p class="pb-lead">No stories yet — check back soon.</p>
+    {%- endif -%}
+  </div>
+  {% endpaginate %}
+</section>
+
+{% stylesheet %}
+.pb-blog__head{max-width:640px;margin-bottom:clamp(2rem,5vw,3.5rem);}
+.pb-blog__feature{position:relative;display:block;aspect-ratio:16/10;border-radius:var(--pb-radius-lg);overflow:hidden;margin-bottom:clamp(1.5rem,3vw,2.5rem);color:#fff;text-decoration:none;}
+.pb-blog__feature img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.pb-blog__feature-veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 40%,rgba(0,0,0,.72));}
+.pb-blog__feature-cap{position:absolute;left:0;bottom:0;padding:clamp(1.4rem,4vw,3rem);display:flex;flex-direction:column;gap:.5rem;z-index:2;max-width:720px;}
+.pb-blog__feature-title{font-family:var(--pb-font-heading);font-size:clamp(1.6rem,4vw,2.8rem);line-height:1.05;font-weight:600;}
+.pb-blog__tag,.pb-blog__kicker{font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;font-weight:700;color:var(--pb-gold);}
+.pb-blog__grid{display:grid;grid-template-columns:1fr;gap:clamp(1.6rem,3vw,2.5rem);}
+.pb-blog__card-media{display:block;aspect-ratio:3/2;border-radius:var(--pb-radius);overflow:hidden;}
+.pb-blog__card-media img,.pb-blog__ph{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.pb-blog__card-body{padding-top:1rem;display:flex;flex-direction:column;gap:.5rem;}
+.pb-blog__card-title{font-family:var(--pb-font-heading);font-size:1.3rem;line-height:1.15;font-weight:600;margin:0;}
+.pb-blog__card-title a{color:inherit;text-decoration:none;}
+.pb-blog__card-title a:hover{text-decoration:underline;text-underline-offset:3px;}
+.pb-blog__excerpt{font-size:.92rem;line-height:1.6;color:var(--pb-muted);margin:0;}
+.pb-blog__meta{font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--pb-muted);}
+@media(min-width:750px){.pb-blog__grid{grid-template-columns:repeat(3,1fr);}}
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "PB · Blog Posts",
+  "tag": "section",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "THE JOURNAL" },
+    { "type": "text", "id": "heading", "label": "Heading (blank = blog title)" },
+    { "type": "textarea", "id": "intro", "label": "Intro", "default": "Stories from the culture — heritage, style and the people repping Punjab worldwide." },
+    { "type": "checkbox", "id": "feature_first", "label": "Feature latest post large", "default": true },
+    { "type": "checkbox", "id": "show_excerpt", "label": "Show excerpt", "default": true },
+    { "type": "checkbox", "id": "show_author", "label": "Show author", "default": true },
+    { "type": "range", "id": "per_page", "min": 6, "max": 24, "step": 3, "label": "Posts per page", "default": 9 },
+    { "type": "color", "id": "bg", "label": "Background", "default": "#F5F1E8" }
+  ],
+  "enabled_on": { "templates": ["blog"] },
+  "presets": [ { "name": "PB · Blog Posts" } ]
+}
+{% endschema %}

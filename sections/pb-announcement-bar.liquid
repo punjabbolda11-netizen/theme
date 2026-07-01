@@ -1,0 +1,78 @@
+{%- comment -%} Punjab Bolda · Announcement Bar — rotating messages, gold-on-dark {%- endcomment -%}
+<div class="pb pb-announce" style="--pb-ann-bg:{{ section.settings.bg }};--pb-ann-fg:{{ section.settings.fg }};">
+  <div class="pb-announce__track" role="region" aria-label="Announcements">
+    {%- for block in section.blocks -%}
+      <div class="pb-announce__item" {{ block.shopify_attributes }} data-index="{{ forloop.index0 }}" {% unless forloop.first %}aria-hidden="true"{% endunless %}>
+        {%- if block.settings.link != blank -%}<a href="{{ block.settings.link }}">{%- endif -%}
+          {%- if block.settings.text != blank -%}<span>{{ block.settings.text }}</span>{%- endif -%}
+        {%- if block.settings.link != blank -%}</a>{%- endif -%}
+      </div>
+    {%- endfor -%}
+  </div>
+</div>
+
+{%- if section.blocks.size > 1 and section.settings.rotate -%}
+<script>
+(function(){
+  var root=document.currentScript.previousElementSibling;
+  var items=root.querySelectorAll('.pb-announce__item');
+  if(items.length<2)return;
+  var i=0,speed={{ section.settings.speed | times: 1000 }};
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  setInterval(function(){
+    items[i].classList.remove('is-on');items[i].setAttribute('aria-hidden','true');
+    i=(i+1)%items.length;
+    items[i].classList.add('is-on');items[i].setAttribute('aria-hidden','false');
+  },speed);
+  items[0].classList.add('is-on');
+})();
+</script>
+{%- endif -%}
+
+{% stylesheet %}
+.pb-announce{background:var(--pb-ann-bg,#111);color:var(--pb-ann-fg,#D4AF37);font-family:var(--pb-font-body);}
+.pb-announce__track{position:relative;display:grid;place-items:center;min-height:42px;padding:.35rem 1rem;}
+.pb-announce__item{grid-area:1/1;font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;font-weight:600;text-align:center;opacity:1;transition:opacity .6s var(--pb-ease);}
+.pb-announce__item a{color:inherit;text-decoration:none;}
+.pb-announce__item a:hover{text-decoration:underline;text-underline-offset:3px;}
+/* When JS rotation active, hide all then show .is-on */
+.pb-announce__track:has(.is-on) .pb-announce__item{opacity:0;pointer-events:none;}
+.pb-announce__track:has(.is-on) .pb-announce__item.is-on{opacity:1;pointer-events:auto;}
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "PB · Announcement Bar",
+  "tag": "section",
+  "class": "pb-section-announce",
+  "settings": [
+    { "type": "header", "content": "Behaviour" },
+    { "type": "checkbox", "id": "rotate", "label": "Auto-rotate messages", "default": true },
+    { "type": "range", "id": "speed", "min": 2, "max": 8, "step": 1, "unit": "s", "label": "Rotation speed", "default": 4 },
+    { "type": "header", "content": "Colours" },
+    { "type": "color", "id": "bg", "label": "Background", "default": "#111111" },
+    { "type": "color", "id": "fg", "label": "Text", "default": "#D4AF37" }
+  ],
+  "blocks": [
+    {
+      "type": "message",
+      "name": "Message",
+      "settings": [
+        { "type": "text", "id": "text", "label": "Text", "default": "FREE SHIPPING OVER $120" },
+        { "type": "url", "id": "link", "label": "Link (optional)" }
+      ]
+    }
+  ],
+  "max_blocks": 6,
+  "presets": [
+    {
+      "name": "PB · Announcement Bar",
+      "blocks": [
+        { "type": "message", "settings": { "text": "FREE SHIPPING OVER $120" } },
+        { "type": "message", "settings": { "text": "ROOTED IN CULTURE • DRIVEN BY PRIDE" } },
+        { "type": "message", "settings": { "text": "NEW COLLECTIONS NOW LIVE" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

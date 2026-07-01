@@ -1,0 +1,67 @@
+{%- comment -%} Punjab Bolda · Collection Banner — editorial header + breadcrumb {%- endcomment -%}
+{%- liquid
+  assign s = section.settings
+  assign img = s.image
+  if img == blank
+    assign img = collection.featured_image
+  endif
+-%}
+<section class="pb pb-cbanner{% if img != blank %} has-image{% endif %}"
+         style="--pb-cb-fg:{% if img != blank %}#fff{% else %}{{ s.text_color }}{% endif %};{% if img != blank %}--pb-cb-overlay:{{ s.overlay | divided_by: 100.0 }};{% endif %}background:{% if img == blank %}{{ s.bg }}{% else %}var(--pb-text){% endif %};">
+  {%- if img != blank -%}
+    <div class="pb-cbanner__media" aria-hidden="true">
+      <img src="{{ img | image_url: width: 2000 }}"
+           srcset="{{ img | image_url: width: 800 }} 800w, {{ img | image_url: width: 1400 }} 1400w, {{ img | image_url: width: 2000 }} 2000w"
+           sizes="100vw" width="{{ img.width }}" height="{{ img.height }}" alt="" loading="eager" fetchpriority="high">
+    </div>
+  {%- endif -%}
+  <div class="pb-wrap pb-cbanner__inner">
+    {%- if s.show_breadcrumb -%}{% render 'pb-breadcrumbs' %}{%- endif -%}
+    {%- if s.eyebrow != blank -%}<p class="pb-eyebrow pb-reveal" style="color:var(--pb-gold)">{{ s.eyebrow }}</p>{%- endif -%}
+    <h1 class="pb-cbanner__title pb-reveal" style="--pb-delay:60ms">{{ s.title | default: collection.title }}</h1>
+    {%- liquid
+      assign desc = s.description
+      if desc == blank
+        assign desc = collection.description
+      endif
+    -%}
+    {%- if desc != blank and s.show_description -%}
+      <div class="pb-cbanner__desc pb-reveal" style="--pb-delay:140ms">{{ desc }}</div>
+    {%- endif -%}
+    {%- if s.show_count -%}<p class="pb-cbanner__count pb-reveal" style="--pb-delay:200ms">{{ collection.products_count }} {{ collection.products_count | pluralize: 'piece', 'pieces' }}</p>{%- endif -%}
+  </div>
+</section>
+
+{% stylesheet %}
+.pb-cbanner{position:relative;color:var(--pb-cb-fg);overflow:hidden;isolation:isolate;}
+.pb-cbanner__media{position:absolute;inset:0;z-index:-1;}
+.pb-cbanner__media::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,calc(var(--pb-cb-overlay,.4)*.6)),rgba(0,0,0,var(--pb-cb-overlay,.4)));}
+.pb-cbanner__media img{width:100%;height:100%;object-fit:cover;}
+.pb-cbanner__inner{padding-block:clamp(2.5rem,7vw,6rem);max-width:760px;}
+.pb-cbanner.has-image .pb-cbanner__inner{padding-block:clamp(4rem,12vw,9rem);}
+.pb-cbanner__title{font-family:var(--pb-font-heading);font-size:var(--pb-h1);line-height:1;font-weight:600;letter-spacing:-.02em;margin:.4rem 0 0;text-wrap:balance;}
+.pb-cbanner__desc{margin-top:1.1rem;font-size:var(--pb-body);line-height:1.7;opacity:.86;max-width:58ch;}
+.pb-cbanner__desc p{margin:0 0 .6rem;}
+.pb-cbanner__count{margin-top:1.2rem;font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;opacity:.7;}
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "PB · Collection Banner",
+  "tag": "section",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "THE COLLECTION" },
+    { "type": "text", "id": "title", "label": "Title (blank = collection name)" },
+    { "type": "richtext", "id": "description", "label": "Description (blank = collection description)" },
+    { "type": "image_picker", "id": "image", "label": "Background image (blank = collection image)" },
+    { "type": "checkbox", "id": "show_breadcrumb", "label": "Show breadcrumb", "default": true },
+    { "type": "checkbox", "id": "show_description", "label": "Show description", "default": true },
+    { "type": "checkbox", "id": "show_count", "label": "Show product count", "default": true },
+    { "type": "range", "id": "overlay", "min": 0, "max": 80, "step": 5, "unit": "%", "label": "Image darkening", "default": 40 },
+    { "type": "color", "id": "bg", "label": "Background (no image)", "default": "#EEE1D3" },
+    { "type": "color", "id": "text_color", "label": "Text (no image)", "default": "#111111" }
+  ],
+  "enabled_on": { "templates": ["collection"] },
+  "presets": [ { "name": "PB · Collection Banner" } ]
+}
+{% endschema %}

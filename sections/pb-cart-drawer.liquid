@@ -1,0 +1,367 @@
+{%- comment -%}
+  Punjab Bolda · AJAX Cart Drawer
+  - Slide-out from the right, hooks the header bag icon (.pb-header__cart / [data-pb-cart-toggle]).
+  - Re-renders via Shopify's NATIVE Section Rendering API (Liquid stays source of truth
+    for money, discounts and the free-shipping bar). Native /cart/change.js + /cart/add.js.
+  - Add to the FOOTER section group so it renders on every page. Works without JS
+    (bag icon falls back to the native /cart page).
+  Accessibility: role=dialog, aria-modal, focus trap, ESC, focus return, live region.
+{%- endcomment -%}
+{%- liquid
+  assign s = section.settings
+  assign threshold = s.free_ship_threshold | times: 100
+  assign remaining = threshold | minus: cart.total_price
+  assign pct = 0
+  if threshold > 0
+    assign pct = cart.total_price | times: 100 | divided_by: threshold
+    if pct > 100
+      assign pct = 100
+    endif
+  endif
+-%}
+<div class="pb pb-cd" data-pb-cd data-section-id="{{ section.id }}"
+     style="--pb-cd-bg:{{ s.bg }};--pb-cd-fg:{{ s.fg }};--pb-cd-accent:{{ s.accent }};--pb-cd-w:{{ s.width }}px;" hidden>
+  <div class="pb-cd__overlay" data-pb-cd-close tabindex="-1" aria-hidden="true"></div>
+
+  <aside class="pb-cd__panel" role="dialog" aria-modal="true" aria-label="{{ s.heading | default: 'Your bag' }}" data-pb-cd-panel>
+    <header class="pb-cd__head">
+      <h2 class="pb-cd__title">{{ s.heading | default: 'Your bag' }}
+        <span class="pb-cd__count" data-pb-cd-count>{{ cart.item_count }}</span>
+      </h2>
+      <button type="button" class="pb-cd__close" data-pb-cd-close aria-label="Close cart">{% render 'pb-icon', icon: 'close' %}</button>
+    </header>
+
+    <span class="pb-visually-hidden" role="status" aria-live="polite" data-pb-cd-status></span>
+
+    {%- comment -%} ============ Re-renderable region ============ {%- endcomment -%}
+    <div class="pb-cd__contents" data-pb-cd-contents data-cart-count="{{ cart.item_count }}">
+      {%- if cart.item_count > 0 -%}
+
+        {%- if s.show_free_ship and threshold > 0 -%}
+          <div class="pb-cd__ship">
+            <p class="pb-cd__ship-msg">
+              {%- if remaining > 0 -%}You’re <strong>{{ remaining | money }}</strong> from free shipping.
+              {%- else -%}{{ s.free_ship_reached | default: '🎉 You’ve unlocked free shipping.' }}{%- endif -%}
+            </p>
+            <div class="pb-cd__ship-track"><span class="pb-cd__ship-fill" style="width:{{ pct }}%"></span></div>
+          </div>
+        {%- endif -%}
+
+        <ul class="pb-cd__items" data-pb-cd-items>
+          {%- for item in cart.items -%}
+            <li class="pb-cd__item" data-pb-cd-line data-key="{{ item.key }}">
+              <a class="pb-cd__thumb" href="{{ item.url }}" tabindex="-1" aria-hidden="true">
+                {%- if item.image -%}<img src="{{ item.image | image_url: width: 160 }}" width="72" height="90" alt="" loading="lazy">{%- else -%}{{ 'product-1' | placeholder_svg_tag }}{%- endif -%}
+              </a>
+              <div class="pb-cd__detail">
+                <div class="pb-cd__row1">
+                  <div class="pb-cd__names">
+                    <a class="pb-cd__name" href="{{ item.url }}">{{ item.product.title }}</a>
+                    {%- unless item.product.has_only_default_variant -%}<span class="pb-cd__variant">{{ item.variant.title }}</span>{%- endunless -%}
+                    {%- for prop in item.properties -%}{%- if prop.last != blank and prop.first != '_' -%}<span class="pb-cd__variant">{{ prop.first }}: {{ prop.last }}</span>{%- endif -%}{%- endfor -%}
+                  </div>
+                  <button type="button" class="pb-cd__remove" data-pb-cd-remove aria-label="Remove {{ item.product.title | escape }}">{% render 'pb-icon', icon: 'close' %}</button>
+                </div>
+                <div class="pb-cd__row2">
+                  <div class="pb-qty pb-qty--sm" data-pb-cd-qty>
+                    <button type="button" class="pb-qty__btn" data-pb-cd-dec aria-label="Decrease quantity of {{ item.product.title | escape }}">{% render 'pb-icon', icon: 'minus' %}</button>
+                    <input type="number" class="pb-qty__input" value="{{ item.quantity }}" min="0" inputmode="numeric" aria-label="Quantity of {{ item.product.title | escape }}" data-pb-cd-input>
+                    <button type="button" class="pb-qty__btn" data-pb-cd-inc aria-label="Increase quantity of {{ item.product.title | escape }}">{% render 'pb-icon', icon: 'plus' %}</button>
+                  </div>
+                  <div class="pb-cd__prices">
+                    {%- if item.original_line_price != item.final_line_price -%}
+                      <span class="pb-cd__price">{{ item.final_line_price | money }}</span>
+                      <s class="pb-cd__was">{{ item.original_line_price | money }}</s>
+                    {%- else -%}
+                      <span class="pb-cd__price">{{ item.final_line_price | money }}</span>
+                    {%- endif -%}
+                  </div>
+                </div>
+                {%- if item.line_level_discount_allocations.size > 0 -%}
+                  <ul class="pb-cd__disc">
+                    {%- for d in item.line_level_discount_allocations -%}<li>{% render 'pb-icon', icon: 'check' %} {{ d.discount_application.title }} (−{{ d.amount | money }})</li>{%- endfor -%}
+                  </ul>
+                {%- endif -%}
+              </div>
+            </li>
+          {%- endfor -%}
+        </ul>
+
+        <footer class="pb-cd__foot">
+          {%- if cart.cart_level_discount_applications.size > 0 -%}
+            {%- for d in cart.cart_level_discount_applications -%}
+              <div class="pb-cd__subrow pb-cd__subrow--disc"><span>{{ d.title }}</span><span>−{{ d.total_allocated_amount | money }}</span></div>
+            {%- endfor -%}
+          {%- endif -%}
+          <div class="pb-cd__subrow"><span>Subtotal</span><strong data-pb-cd-subtotal>{{ cart.total_price | money }}</strong></div>
+          <p class="pb-cd__tax">Taxes &amp; shipping calculated at checkout.</p>
+
+          {%- if s.show_note -%}
+            <details class="pb-cd__note">
+              <summary>Add a note {% render 'pb-icon', icon: 'chevron' %}</summary>
+              <textarea data-pb-cd-note placeholder="Notes for your order…" aria-label="Order note">{{ cart.note }}</textarea>
+            </details>
+          {%- endif -%}
+
+          <a class="pb-btn pb-cd__checkout" href="{{ routes.cart_url }}/checkout" data-pb-cd-checkout>{{ s.checkout_label | default: 'Checkout' }} · {{ cart.total_price | money }}</a>
+          <a class="pb-cd__viewcart" href="{{ routes.cart_url }}">{{ s.viewcart_label | default: 'View full cart' }}</a>
+
+          {%- if s.trust_text != blank -%}
+            <ul class="pb-cd__trust">
+              {%- assign rows = s.trust_text | newline_to_br | split: '<br />' -%}
+              {%- for row in rows -%}{%- if row != blank -%}<li>{% render 'pb-icon', icon: 'check' %} {{ row | strip }}</li>{%- endif -%}{%- endfor -%}
+            </ul>
+          {%- endif -%}
+        </footer>
+
+      {%- else -%}
+        {%- comment -%} ---- Empty state ---- {%- endcomment -%}
+        <div class="pb-cd__empty">
+          <span class="pb-cd__empty-icon" aria-hidden="true">{% render 'pb-icon', icon: 'bag' %}</span>
+          <p class="pb-cd__empty-title">{{ s.empty_heading | default: 'Your bag is empty.' }}</p>
+          <p class="pb-cd__empty-text">{{ s.empty_text | default: 'Time to rep your roots — explore the latest drops.' }}</p>
+          <a class="pb-btn pb-btn--gold" href="{{ s.empty_link | default: routes.all_products_collection_url }}" data-pb-cd-close>{{ s.empty_label | default: 'Start shopping' }}</a>
+        </div>
+      {%- endif -%}
+    </div>
+    {%- comment -%} ============ /Re-renderable region ============ {%- endcomment -%}
+  </aside>
+</div>
+
+<script>
+(function(){
+  var root=document.querySelector('[data-pb-cd]');
+  if(!root||root.dataset.pbBound)return;
+  root.dataset.pbBound='1';
+
+  var sectionId=root.dataset.sectionId;
+  var panel=root.querySelector('[data-pb-cd-panel]');
+  var status=root.querySelector('[data-pb-cd-status]');
+  var lastFocus=null;
+  var FOCUSABLE='a[href],button:not([disabled]),textarea,input,select,[tabindex]:not([tabindex="-1"])';
+
+  /* ---------- open / close ---------- */
+  function open(){
+    if(!root.hidden && root.classList.contains('is-open'))return;
+    lastFocus=document.activeElement;
+    root.hidden=false;
+    requestAnimationFrame(function(){root.classList.add('is-open');});
+    document.body.style.overflow='hidden';
+    document.querySelectorAll('[data-pb-cart-toggle],.pb-header__cart').forEach(function(b){b.setAttribute('aria-expanded','true');});
+    var first=panel.querySelector('[data-pb-cd-close]');
+    if(first)first.focus();
+    document.addEventListener('keydown',onKey);
+  }
+  function close(){
+    root.classList.remove('is-open');
+    document.body.style.overflow='';
+    document.querySelectorAll('[data-pb-cart-toggle],.pb-header__cart').forEach(function(b){b.setAttribute('aria-expanded','false');});
+    document.removeEventListener('keydown',onKey);
+    setTimeout(function(){root.hidden=true;},360);
+    if(lastFocus&&lastFocus.focus)lastFocus.focus();
+  }
+  function onKey(e){
+    if(e.key==='Escape'){e.preventDefault();close();return;}
+    if(e.key==='Tab'){trap(e);}
+  }
+  function trap(e){
+    var nodes=Array.prototype.filter.call(panel.querySelectorAll(FOCUSABLE),function(n){return n.offsetParent!==null;});
+    if(!nodes.length)return;
+    var first=nodes[0],last=nodes[nodes.length-1];
+    if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+    else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+  }
+
+  /* ---------- hook header bag icon ---------- */
+  function bindOpeners(){
+    document.querySelectorAll('.pb-header__cart,[data-pb-cart-toggle]').forEach(function(el){
+      if(el.dataset.pbCdHooked)return;el.dataset.pbCdHooked='1';
+      el.setAttribute('aria-haspopup','dialog');el.setAttribute('aria-expanded','false');
+      el.addEventListener('click',function(e){e.preventDefault();open();});
+    });
+  }
+  bindOpeners();
+  document.addEventListener('shopify:section:load',bindOpeners);
+
+  /* close handlers (delegated for re-rendered content) */
+  root.addEventListener('click',function(e){
+    if(e.target.closest('[data-pb-cd-close]')){e.preventDefault();close();}
+  });
+
+  /* ---------- helpers ---------- */
+  function setBusy(on){panel.setAttribute('aria-busy',on?'true':'false');panel.classList.toggle('is-busy',on);}
+  function announce(msg){if(status)status.textContent=msg;}
+
+  function swap(html){
+    var doc=new DOMParser().parseFromString(html,'text/html');
+    var fresh=doc.querySelector('[data-pb-cd-contents]');
+    var cur=root.querySelector('[data-pb-cd-contents]');
+    if(fresh&&cur){
+      cur.innerHTML=fresh.innerHTML;
+      var count=fresh.getAttribute('data-cart-count')||'0';
+      cur.setAttribute('data-cart-count',count);
+      updateHeaderCount(count);
+      var c=root.querySelector('[data-pb-cd-count]');if(c)c.textContent=count;
+    }
+  }
+  function updateHeaderCount(count){
+    document.querySelectorAll('[data-pb-cart-count]').forEach(function(el){el.textContent=count;el.classList.toggle('is-empty',count==='0'||count===0);});
+    var a=document.querySelector('[data-pb-cart-count-a11y]');if(a)a.textContent=count+' items in cart';
+  }
+
+  /* ---------- AJAX line change via native Section Rendering API ---------- */
+  function change(key,qty,announceMsg){
+    setBusy(true);
+    fetch('/cart/change.js',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body:JSON.stringify({id:key,quantity:qty,sections:sectionId,sections_url:window.location.pathname})
+    })
+    .then(function(r){return r.json();})
+    .then(function(cart){
+      if(cart.sections&&cart.sections[sectionId])swap(cart.sections[sectionId]);
+      announce(announceMsg||'Cart updated.');
+      document.dispatchEvent(new CustomEvent('pb:cart:updated',{detail:{source:'drawer',cart:cart}}));
+      setBusy(false);
+    })
+    .catch(function(){setBusy(false);window.location.href='{{ routes.cart_url }}';});
+  }
+
+  /* delegated controls */
+  root.addEventListener('click',function(e){
+    var line=e.target.closest('[data-pb-cd-line]');
+    if(!line)return;
+    var key=line.dataset.key,input=line.querySelector('[data-pb-cd-input]');
+    if(e.target.closest('[data-pb-cd-inc]')){change(key,(parseInt(input.value)||1)+1);}
+    else if(e.target.closest('[data-pb-cd-dec]')){change(key,Math.max(0,(parseInt(input.value)||1)-1));}
+    else if(e.target.closest('[data-pb-cd-remove]')){var t=line.querySelector('.pb-cd__name');change(key,0,(t?t.textContent:'Item')+' removed.');}
+  });
+  root.addEventListener('change',function(e){
+    if(e.target.matches('[data-pb-cd-input]')){
+      var line=e.target.closest('[data-pb-cd-line]');
+      change(line.dataset.key,Math.max(0,parseInt(e.target.value)||0));
+    }
+  });
+  /* order note (debounced) */
+  var noteTimer;
+  root.addEventListener('input',function(e){
+    if(e.target.matches('[data-pb-cd-note]')){
+      clearTimeout(noteTimer);var val=e.target.value;
+      noteTimer=setTimeout(function(){fetch('/cart/update.js',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({note:val})});},500);
+    }
+  });
+
+  /* ---------- refresh from current cart (used after external add) ---------- */
+  function refresh(){
+    return fetch(window.location.pathname+'?sections='+sectionId,{headers:{'Accept':'application/json'}})
+      .then(function(r){return r.json();})
+      .then(function(data){if(data[sectionId])swap(data[sectionId]);})
+      .catch(function(){});
+  }
+
+  /* When any PB add-to-cart fires elsewhere, refresh + open (unless the drawer caused it) */
+  document.addEventListener('pb:cart:updated',function(e){
+    if(e.detail&&e.detail.source==='drawer')return;
+    {% if s.open_on_add %}refresh().then(open);{% else %}refresh();{% endif %}
+  });
+  document.addEventListener('pb:cart:open',open);
+  document.addEventListener('cart:refresh',refresh);
+})();
+</script>
+
+{% stylesheet %}
+.pb-cd{position:fixed;inset:0;z-index:90;}
+.pb-cd[hidden]{display:none;}
+.pb-cd__overlay{position:absolute;inset:0;background:rgba(17,17,17,.5);opacity:0;transition:opacity .35s var(--pb-ease);}
+.pb-cd.is-open .pb-cd__overlay{opacity:1;}
+.pb-cd__panel{position:absolute;top:0;right:0;height:100%;height:100dvh;width:min(92vw,var(--pb-cd-w,420px));background:var(--pb-cd-bg,#F5F1E8);color:var(--pb-cd-fg,#111);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .4s var(--pb-ease);box-shadow:-12px 0 40px -20px rgba(0,0,0,.5);}
+.pb-cd.is-open .pb-cd__panel{transform:none;}
+.pb-cd__panel.is-busy{cursor:progress;}
+.pb-cd__panel.is-busy .pb-cd__items{opacity:.55;pointer-events:none;}
+.pb-cd__head{display:flex;align-items:center;justify-content:space-between;padding:1.1rem 1.25rem;border-bottom:1px solid var(--pb-line);flex:0 0 auto;}
+.pb-cd__title{font-family:var(--pb-font-heading);font-size:1.2rem;font-weight:600;margin:0;display:flex;align-items:center;gap:.5rem;}
+.pb-cd__count{font-size:.7rem;background:var(--pb-cd-accent,#D4AF37);color:#1a1407;min-width:20px;height:20px;border-radius:10px;display:inline-grid;place-items:center;padding:0 6px;font-weight:700;}
+.pb-cd__close{background:none;border:0;cursor:pointer;color:inherit;width:40px;height:40px;display:grid;place-items:center;border-radius:50%;transition:background .25s;}
+.pb-cd__close:hover{background:rgba(17,17,17,.06);}
+.pb-cd__contents{display:flex;flex-direction:column;flex:1;min-height:0;}
+.pb-cd__ship{padding:1rem 1.25rem;border-bottom:1px solid var(--pb-line);flex:0 0 auto;}
+.pb-cd__ship-msg{margin:0 0 .55rem;font-size:.82rem;}
+.pb-cd__ship-track{height:6px;border-radius:6px;background:var(--pb-bg-secondary);overflow:hidden;}
+.pb-cd__ship-fill{display:block;height:100%;background:var(--pb-cd-accent,#D4AF37);transition:width .5s var(--pb-ease);}
+.pb-cd__items{list-style:none;margin:0;padding:.5rem 1.25rem;overflow-y:auto;flex:1;min-height:0;-webkit-overflow-scrolling:touch;}
+.pb-cd__item{display:flex;gap:.9rem;padding:1rem 0;border-bottom:1px solid var(--pb-line);}
+.pb-cd__thumb{flex:0 0 72px;width:72px;aspect-ratio:4/5;border-radius:var(--pb-radius);overflow:hidden;background:var(--pb-bg-secondary);}
+.pb-cd__thumb img{width:100%;height:100%;object-fit:cover;}
+.pb-cd__detail{flex:1;min-width:0;display:flex;flex-direction:column;}
+.pb-cd__row1{display:flex;justify-content:space-between;gap:.6rem;}
+.pb-cd__names{display:flex;flex-direction:column;gap:.15rem;min-width:0;}
+.pb-cd__name{font-family:var(--pb-font-heading);font-size:.98rem;font-weight:600;line-height:1.2;color:inherit;text-decoration:none;}
+.pb-cd__name:hover{text-decoration:underline;text-underline-offset:2px;}
+.pb-cd__variant{font-size:.76rem;color:var(--pb-muted);}
+.pb-cd__remove{background:none;border:0;cursor:pointer;color:var(--pb-muted);padding:.15rem;height:fit-content;transition:color .2s;}
+.pb-cd__remove:hover{color:var(--pb-cd-fg);}
+.pb-cd__row2{display:flex;align-items:center;justify-content:space-between;gap:.6rem;margin-top:auto;padding-top:.7rem;}
+.pb-qty--sm{display:inline-flex;align-items:center;border:1px solid var(--pb-line-strong);border-radius:var(--pb-radius);}
+.pb-qty--sm .pb-qty__btn{width:34px;height:38px;display:grid;place-items:center;background:none;border:0;cursor:pointer;color:inherit;}
+.pb-qty--sm .pb-qty__input{width:34px;height:38px;text-align:center;border:0;background:transparent;font-size:.92rem;color:inherit;-moz-appearance:textfield;}
+.pb-qty--sm .pb-qty__input::-webkit-outer-spin-button,.pb-qty--sm .pb-qty__input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+.pb-cd__prices{display:flex;flex-direction:column;align-items:flex-end;}
+.pb-cd__price{font-weight:600;font-size:.92rem;}
+.pb-cd__was{color:var(--pb-muted);font-size:.78rem;}
+.pb-cd__disc{list-style:none;margin:.4rem 0 0;padding:0;}
+.pb-cd__disc li{font-size:.72rem;color:var(--pb-cd-accent,#D4AF37);display:flex;align-items:center;gap:.3rem;}
+.pb-cd__foot{padding:1.1rem 1.25rem calc(1.1rem + env(safe-area-inset-bottom));border-top:1px solid var(--pb-line);flex:0 0 auto;background:var(--pb-cd-bg,#F5F1E8);}
+.pb-cd__subrow{display:flex;justify-content:space-between;align-items:baseline;font-size:1rem;margin-bottom:.4rem;}
+.pb-cd__subrow strong{font-size:1.15rem;}
+.pb-cd__subrow--disc{color:var(--pb-cd-accent,#D4AF37);font-size:.88rem;}
+.pb-cd__tax{font-size:.74rem;color:var(--pb-muted);margin:.2rem 0 1rem;}
+.pb-cd__note{margin-bottom:.9rem;border-top:1px solid var(--pb-line);border-bottom:1px solid var(--pb-line);}
+.pb-cd__note summary{display:flex;align-items:center;justify-content:space-between;padding:.7rem 0;cursor:pointer;list-style:none;font-size:.82rem;font-weight:600;}
+.pb-cd__note summary::-webkit-details-marker{display:none;}
+.pb-cd__note textarea{width:100%;border:1px solid var(--pb-line-strong);border-radius:var(--pb-radius);padding:.7rem;font-family:var(--pb-font-body);font-size:.88rem;margin-bottom:.8rem;min-height:70px;background:var(--pb-card);color:var(--pb-cd-fg);}
+.pb-cd__checkout{width:100%;background:var(--pb-cd-fg,#111);color:var(--pb-cd-bg,#fff);border-color:var(--pb-cd-fg,#111);}
+.pb-cd__checkout:hover{background:var(--pb-cd-accent,#D4AF37);border-color:var(--pb-cd-accent,#D4AF37);color:#1a1407;}
+.pb-cd__viewcart{display:block;text-align:center;margin-top:.8rem;font-size:.76rem;letter-spacing:.1em;text-transform:uppercase;color:var(--pb-muted);text-decoration:none;}
+.pb-cd__viewcart:hover{color:var(--pb-cd-fg);}
+.pb-cd__trust{list-style:none;margin:1rem 0 0;padding:.9rem 0 0;border-top:1px solid var(--pb-line);display:grid;gap:.45rem;}
+.pb-cd__trust li{display:flex;align-items:center;gap:.5rem;font-size:.76rem;color:var(--pb-muted);}
+.pb-cd__trust svg{color:var(--pb-cd-accent,#D4AF37);flex:0 0 auto;}
+.pb-cd__empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem 1.5rem;gap:.6rem;}
+.pb-cd__empty-icon{display:grid;place-items:center;width:64px;height:64px;border-radius:50%;background:var(--pb-bg-secondary);color:var(--pb-cd-accent,#D4AF37);margin-bottom:.4rem;}
+.pb-cd__empty-icon svg{width:26px;height:26px;}
+.pb-cd__empty-title{font-family:var(--pb-font-heading);font-size:1.3rem;font-weight:600;margin:0;}
+.pb-cd__empty-text{color:var(--pb-muted);font-size:.9rem;margin:0 0 1rem;max-width:30ch;}
+@media(prefers-reduced-motion:reduce){.pb-cd__panel,.pb-cd__overlay,.pb-cd__ship-fill{transition:none!important;}}
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "PB · Cart Drawer",
+  "settings": [
+    { "type": "paragraph", "content": "Add to the Footer group so it loads on every page. It auto-hooks the header bag icon. Native /cart is the no-JS fallback." },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Your bag" },
+    { "type": "checkbox", "id": "open_on_add", "label": "Open automatically when an item is added", "default": true },
+    { "type": "range", "id": "width", "min": 360, "max": 520, "step": 10, "unit": "px", "label": "Drawer width", "default": 420 },
+    { "type": "header", "content": "Free shipping bar" },
+    { "type": "checkbox", "id": "show_free_ship", "label": "Show free shipping progress", "default": true },
+    { "type": "number", "id": "free_ship_threshold", "label": "Threshold (store currency)", "default": 120 },
+    { "type": "text", "id": "free_ship_reached", "label": "Unlocked message", "default": "🎉 You’ve unlocked free shipping." },
+    { "type": "header", "content": "Options" },
+    { "type": "checkbox", "id": "show_note", "label": "Allow order note", "default": true },
+    { "type": "text", "id": "checkout_label", "label": "Checkout button", "default": "Checkout" },
+    { "type": "text", "id": "viewcart_label", "label": "View cart label", "default": "View full cart" },
+    { "type": "textarea", "id": "trust_text", "label": "Trust points (one per line)", "default": "Secure encrypted checkout\n30-day easy returns\nShips worldwide" },
+    { "type": "header", "content": "Empty state" },
+    { "type": "text", "id": "empty_heading", "label": "Empty heading", "default": "Your bag is empty." },
+    { "type": "text", "id": "empty_text", "label": "Empty text", "default": "Time to rep your roots — explore the latest drops." },
+    { "type": "text", "id": "empty_label", "label": "Empty button label", "default": "Start shopping" },
+    { "type": "url", "id": "empty_link", "label": "Empty button link" },
+    { "type": "header", "content": "Colours" },
+    { "type": "color", "id": "bg", "label": "Background", "default": "#F5F1E8" },
+    { "type": "color", "id": "fg", "label": "Text", "default": "#111111" },
+    { "type": "color", "id": "accent", "label": "Accent", "default": "#D4AF37" }
+  ],
+  "enabled_on": { "groups": ["footer"] },
+  "presets": [ { "name": "PB · Cart Drawer" } ]
+}
+{% endschema %}

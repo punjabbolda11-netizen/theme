@@ -1,0 +1,107 @@
+{%- comment -%} Punjab Bolda · Article — editorial long-form layout {%- endcomment -%}
+{%- liquid assign s = section.settings -%}
+<article class="pb pb-article" style="background:{{ s.bg }};">
+  <header class="pb-article__hero{% if article.image and s.show_image %} has-image{% endif %}">
+    {%- if article.image and s.show_image -%}
+      <div class="pb-article__hero-media" aria-hidden="true">
+        <img src="{{ article.image | image_url: width: 2000 }}" srcset="{{ article.image | image_url: width: 900 }} 900w, {{ article.image | image_url: width: 1600 }} 1600w, {{ article.image | image_url: width: 2000 }} 2000w" sizes="100vw" width="{{ article.image.width }}" height="{{ article.image.height }}" alt="" fetchpriority="high">
+      </div>
+    {%- endif -%}
+    <div class="pb-wrap pb-article__hero-inner">
+      {%- if s.show_breadcrumb -%}{% render 'pb-breadcrumbs' %}{%- endif -%}
+      {%- if article.tags.size > 0 -%}<p class="pb-eyebrow" style="color:var(--pb-gold)">{{ article.tags.first }}</p>{%- endif -%}
+      <h1 class="pb-article__title">{{ article.title }}</h1>
+      <p class="pb-article__meta">{{ article.published_at | date: '%B %d, %Y' }}{% if article.author != blank %} · {{ article.author }}{% endif %}</p>
+    </div>
+  </header>
+
+  <div class="pb-wrap pb-article__body rte">
+    {{ article.content }}
+  </div>
+
+  {%- if s.show_share -%}
+    <div class="pb-wrap pb-article__share">
+      <span>Share this story</span>
+      <a href="https://www.facebook.com/sharer.php?u={{ shop.url }}{{ article.url }}" target="_blank" rel="noopener">Facebook</a>
+      <a href="https://twitter.com/intent/tweet?url={{ shop.url }}{{ article.url }}&text={{ article.title | url_encode }}" target="_blank" rel="noopener">X</a>
+      <a href="https://wa.me/?text={{ article.title | url_encode }}%20{{ shop.url }}{{ article.url }}" target="_blank" rel="noopener">WhatsApp</a>
+    </div>
+  {%- endif -%}
+
+  {%- if blog.next_article or blog.previous_article -%}
+    <nav class="pb-wrap pb-article__nav" aria-label="More articles">
+      {%- if blog.previous_article -%}<a href="{{ blog.previous_article.url }}" class="pb-article__navlink">{% render 'pb-icon', icon: 'arrow-left' %}<span>Previous</span></a>{%- else -%}<span></span>{%- endif -%}
+      <a href="{{ blog.url }}" class="pb-article__navall">All stories</a>
+      {%- if blog.next_article -%}<a href="{{ blog.next_article.url }}" class="pb-article__navlink pb-article__navlink--next"><span>Next</span>{% render 'pb-icon', icon: 'arrow-right' %}</a>{%- else -%}<span></span>{%- endif -%}
+    </nav>
+  {%- endif -%}
+
+  {%- if s.show_comments and blog.comments_enabled? -%}
+    <div class="pb-wrap pb-article__comments">
+      {%- if article.comments_count > 0 -%}
+        <h2 class="pb-h3">{{ article.comments_count }} {{ article.comments_count | pluralize: 'comment', 'comments' }}</h2>
+        {%- for comment in article.comments -%}
+          <div class="pb-article__comment"><p>{{ comment.content }}</p><span>— {{ comment.author }}, {{ comment.created_at | date: '%B %d, %Y' }}</span></div>
+        {%- endfor -%}
+      {%- endif -%}
+      {%- form 'new_comment', article -%}
+        {%- if form.posted_successfully? -%}<p class="pb-article__cthanks">Thanks — your comment is awaiting moderation.</p>{%- endif -%}
+        <h2 class="pb-h3">Leave a comment</h2>
+        <div class="pb-article__cgrid">
+          <input type="text" name="comment[author]" placeholder="Name" required aria-label="Name">
+          <input type="email" name="comment[email]" placeholder="Email" required aria-label="Email">
+        </div>
+        <textarea name="comment[body]" placeholder="Your comment" rows="4" required aria-label="Comment"></textarea>
+        <button type="submit" class="pb-btn pb-btn--gold pb-mt-1">Post comment</button>
+      {%- endform -%}
+    </div>
+  {%- endif -%}
+</article>
+
+{% stylesheet %}
+.pb-article__hero{padding-block:clamp(2rem,5vw,4rem);}
+.pb-article__hero.has-image{position:relative;color:#fff;padding-block:clamp(4rem,12vw,9rem);overflow:hidden;isolation:isolate;}
+.pb-article__hero-media{position:absolute;inset:0;z-index:-1;}
+.pb-article__hero-media::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.3),rgba(0,0,0,.6));}
+.pb-article__hero-media img{width:100%;height:100%;object-fit:cover;}
+.pb-article__hero-inner{max-width:760px;}
+.pb-article__title{font-family:var(--pb-font-heading);font-size:var(--pb-h1);line-height:1.02;font-weight:600;letter-spacing:-.02em;margin:.4rem 0 0;text-wrap:balance;}
+.pb-article__meta{margin-top:1rem;font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;opacity:.75;}
+.pb-article__body{max-width:720px;margin-inline:auto;padding-block:clamp(2.5rem,6vw,4rem);font-size:1.1rem;line-height:1.85;color:var(--pb-text);}
+.pb-article__body p{margin:0 0 1.5rem;}
+.pb-article__body h2{font-family:var(--pb-font-heading);font-size:clamp(1.5rem,3vw,2rem);margin:2.5rem 0 1rem;}
+.pb-article__body h3{font-family:var(--pb-font-heading);font-size:1.3rem;margin:2rem 0 .8rem;}
+.pb-article__body img{max-width:100%;height:auto;border-radius:var(--pb-radius-lg);margin:1.5rem 0;}
+.pb-article__body a{color:var(--pb-text);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--pb-gold);}
+.pb-article__body blockquote{border-left:3px solid var(--pb-gold);margin:2rem 0;padding:.5rem 0 .5rem 1.5rem;font-family:var(--pb-font-heading);font-size:1.4rem;font-style:italic;}
+.pb-article__share{max-width:720px;margin-inline:auto;display:flex;flex-wrap:wrap;align-items:center;gap:1rem;padding-bottom:2rem;border-bottom:1px solid var(--pb-line);font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;}
+.pb-article__share span{color:var(--pb-muted);}
+.pb-article__share a{color:var(--pb-text);text-decoration:none;border-bottom:1px solid transparent;}
+.pb-article__share a:hover{border-color:var(--pb-gold);}
+.pb-article__nav{max-width:720px;margin:2.5rem auto 0;display:flex;align-items:center;justify-content:space-between;gap:1rem;}
+.pb-article__navlink{display:inline-flex;align-items:center;gap:.5rem;color:var(--pb-text);text-decoration:none;font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;font-weight:600;}
+.pb-article__navall{color:var(--pb-muted);text-decoration:none;font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;}
+.pb-article__comments{max-width:720px;margin:3rem auto 0;padding-top:2.5rem;border-top:1px solid var(--pb-line);}
+.pb-article__comment{padding:1rem 0;border-bottom:1px solid var(--pb-line);}
+.pb-article__comment span{font-size:.78rem;color:var(--pb-muted);}
+.pb-article__cgrid{display:grid;gap:.8rem;margin:1rem 0 .8rem;}
+.pb-article__comments input,.pb-article__comments textarea{width:100%;border:1px solid var(--pb-line-strong);border-radius:var(--pb-radius);padding:.8rem 1rem;font-family:var(--pb-font-body);font-size:.95rem;background:var(--pb-card);}
+.pb-article__cthanks{color:var(--pb-gold);font-weight:600;}
+@media(min-width:600px){.pb-article__cgrid{grid-template-columns:1fr 1fr;}}
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "PB · Article",
+  "tag": "section",
+  "settings": [
+    { "type": "checkbox", "id": "show_image", "label": "Show featured image hero", "default": true },
+    { "type": "checkbox", "id": "show_breadcrumb", "label": "Show breadcrumb", "default": true },
+    { "type": "checkbox", "id": "show_share", "label": "Show share buttons", "default": true },
+    { "type": "checkbox", "id": "show_comments", "label": "Show comments", "default": true },
+    { "type": "color", "id": "bg", "label": "Background", "default": "#F5F1E8" }
+  ],
+  "enabled_on": { "templates": ["article"] },
+  "presets": [ { "name": "PB · Article" } ]
+}
+{% endschema %}

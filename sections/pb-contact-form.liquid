@@ -1,0 +1,117 @@
+{%- comment -%} Punjab Bolda · Contact Form section {%- endcomment -%}
+
+<section class="pb-section pb-contact" id="pb-contact-{{ section.id }}">
+  <div class="pb-wrap pb-contact__wrap">
+
+    <div class="pb-contact__form-col">
+      {%- if section.settings.heading != blank -%}
+        <h2 class="pb-h2">{{ section.settings.heading }}</h2>
+      {%- endif -%}
+      {%- if section.settings.subheading != blank -%}
+        <p class="pb-lead" style="margin-bottom:2rem;">{{ section.settings.subheading }}</p>
+      {%- endif -%}
+
+      {%- form 'contact', id: 'pb-contact-form' -%}
+
+        {%- if form.posted_successfully? -%}
+          <div class="pb-contact__success" role="alert">
+            <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg>
+            Thanks! We'll be in touch soon.
+          </div>
+        {%- else -%}
+
+          {%- if form.errors -%}
+            <div class="pb-contact__error" role="alert">
+              {{ form.errors | default_errors }}
+            </div>
+          {%- endif -%}
+
+          <div class="pb-field">
+            <label class="pb-field__label" for="pb-contact-name">Name</label>
+            <input class="pb-field__input" type="text" id="pb-contact-name" name="contact[name]"
+              value="{{ form.name }}" autocomplete="name" required>
+          </div>
+
+          <div class="pb-field">
+            <label class="pb-field__label" for="pb-contact-email">Email</label>
+            <input class="pb-field__input" type="email" id="pb-contact-email" name="contact[email]"
+              value="{{ form.email }}" autocomplete="email" required>
+          </div>
+
+          <div class="pb-field">
+            <label class="pb-field__label" for="pb-contact-phone">Phone <span style="font-weight:400;opacity:.6;">(optional)</span></label>
+            <input class="pb-field__input" type="tel" id="pb-contact-phone" name="contact[phone]"
+              value="{{ form.phone }}" autocomplete="tel">
+          </div>
+
+          <div class="pb-field">
+            <label class="pb-field__label" for="pb-contact-subject">Subject</label>
+            <select class="pb-field__input" id="pb-contact-subject" name="contact[subject]">
+              <option value="">Select a topic…</option>
+              <option value="Order enquiry">Order enquiry</option>
+              <option value="Returns & exchanges">Returns &amp; exchanges</option>
+              <option value="Wholesale & stockists">Wholesale &amp; stockists</option>
+              <option value="Press & media">Press &amp; media</option>
+              <option value="Collaboration">Collaboration</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div class="pb-field">
+            <label class="pb-field__label" for="pb-contact-body">Message</label>
+            <textarea class="pb-field__input pb-field__input--ta" id="pb-contact-body" name="contact[body]"
+              rows="6" required>{{ form.body }}</textarea>
+          </div>
+
+          <button type="submit" class="pb-btn pb-btn--gold" style="width:100%;margin-top:.5rem;">
+            Send message
+          </button>
+
+        {%- endif -%}
+      {%- endform -%}
+    </div>
+
+    {%- if section.settings.show_info -%}
+    <aside class="pb-contact__info-col">
+      <div class="pb-aside-card">
+        <p class="pb-eyebrow">Contact info</p>
+        {%- if section.settings.email_value != blank -%}
+          <p>
+            <strong>{{ section.settings.email_label | default: 'Email' }}</strong><br>
+            <a href="mailto:{{ section.settings.email_value }}">{{ section.settings.email_value }}</a>
+          </p>
+        {%- endif -%}
+        {%- if section.settings.info_text != blank -%}
+          <p style="margin-top:1.2rem;font-size:.9rem;line-height:1.7;opacity:.8;">{{ section.settings.info_text }}</p>
+        {%- endif -%}
+        <p style="margin-top:1.6rem;font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;opacity:.5;">Response time: 1–2 business days</p>
+      </div>
+    </aside>
+    {%- endif -%}
+
+  </div>
+</section>
+
+{% stylesheet %}
+.pb-contact__wrap{display:grid;grid-template-columns:1fr;gap:3rem;max-width:900px;margin-inline:auto;}
+@media(min-width:720px){.pb-contact__wrap{grid-template-columns:1fr 340px;align-items:start;}}
+.pb-contact__success{display:flex;align-items:center;gap:.75rem;background:#e8f5e9;border:1px solid #a5d6a7;border-radius:8px;padding:1.1rem 1.4rem;color:#1b5e20;font-weight:500;margin-bottom:1.5rem;}
+.pb-contact__error{background:#fdecea;border:1px solid #f5c6cb;border-radius:8px;padding:1rem 1.4rem;color:#7b1a1a;margin-bottom:1.5rem;}
+.pb-contact__error a{color:inherit;}
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "PB · Contact Form",
+  "tag": "section",
+  "settings": [
+    {"type":"text","id":"heading","label":"Heading","default":"Send us a message"},
+    {"type":"text","id":"subheading","label":"Subheading","default":"We'll get back to you within 1–2 business days."},
+    {"type":"checkbox","id":"show_info","label":"Show contact info sidebar","default":true},
+    {"type":"text","id":"email_label","label":"Email label","default":"Email us"},
+   {"type":"text","id":"email_value","label":"Email address"},
+    {"type":"textarea","id":"info_text","label":"Additional info text","default":"For wholesale, press, or collaboration enquiries please include details in your message."}
+  ],
+  "enabled_on": {"templates": ["page"]}
+}
+{% endschema %}

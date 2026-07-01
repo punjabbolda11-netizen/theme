@@ -1,0 +1,88 @@
+{%- comment -%}
+  Punjab Bolda · Mobile Sticky Add-to-Cart bar.
+  Place inside the product template (below the main product section).
+  Reads the variant from the main product form via [name="id"]; falls back to product JSON.
+{%- endcomment -%}
+{%- liquid
+  assign s = section.settings
+  assign p = product
+  assign v = p.selected_or_first_available_variant
+-%}
+{%- if p != blank -%}
+<div class="pb pb-satc" data-pb-satc style="--pb-satc-show:{{ s.reveal_after }}px;" hidden>
+  <div class="pb-satc__inner">
+    {%- if p.featured_media -%}
+      <img class="pb-satc__thumb" src="{{ p.featured_media | image_url: width: 120 }}" width="48" height="60" alt="" loading="lazy">
+    {%- endif -%}
+    <div class="pb-satc__info">
+      <span class="pb-satc__title">{{ p.title }}</span>
+      <span class="pb-satc__price" data-pb-satc-price>{{ v.price | money }}</span>
+    </div>
+    <form method="post" action="{{ routes.cart_add_url }}" class="pb-satc__form" data-pb-quickadd>
+      <input type="hidden" name="id" value="{{ v.id }}" data-pb-satc-id>
+      <button type="submit" class="pb-btn pb-btn--gold pb-satc__btn" {% unless p.available %}disabled{% endunless %}>
+        <span>{% if p.available %}{{ s.label | default: 'Add to cart' }}{% else %}{{ s.sold_out | default: 'Sold out' }}{% endif %}</span>
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+(function(){
+  var bar=document.querySelector('[data-pb-satc]');
+  if(!bar)return;
+  var after=parseInt(getComputedStyle(bar).getPropertyValue('--pb-satc-show'))||600;
+  // Reveal on scroll past threshold (mobile only via CSS)
+  function onScroll(){
+    if(window.pageYOffset>after){bar.hidden=false;bar.classList.add('is-visible');}
+    else{bar.classList.remove('is-visible');}
+  }
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+
+  // Preferred: listen to PB main-product variant change event
+  var idField=bar.querySelector('[data-pb-satc-id]');
+  var priceEl=bar.querySelector('[data-pb-satc-price]');
+  document.addEventListener('pb:variant:change',function(e){
+    if(!e.detail)return;
+    if(idField)idField.value=e.detail.id;
+    if(priceEl&&e.detail.price)priceEl.textContent=e.detail.price;
+  });
+
+  // Fallback: sync from any native product form on the page
+  var mainForm=document.querySelector('form[action$="/cart/add"]:not(.pb-satc__form), product-form form, [data-type="add-to-cart-form"]');
+  var mainId=mainForm&&mainForm.querySelector('[name="id"]');
+  if(mainId&&idField){
+    var sync=function(){idField.value=mainId.value;};
+    mainId.addEventListener('change',sync);
+    document.addEventListener('change',function(ev){if(mainForm.contains(ev.target))setTimeout(sync,40);});
+  }
+})();
+</script>
+{%- endif -%}
+
+{% stylesheet %}
+.pb-satc{position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--pb-card);border-top:1px solid var(--pb-line);box-shadow:0 -8px 30px -16px rgba(0,0,0,.3);transform:translateY(110%);transition:transform .45s var(--pb-ease);padding-bottom:env(safe-area-inset-bottom);}
+.pb-satc.is-visible{transform:none;}
+.pb-satc__inner{display:flex;align-items:center;gap:.8rem;padding:.7rem clamp(1rem,4vw,1.5rem);max-width:var(--pb-maxw);margin-inline:auto;}
+.pb-satc__thumb{border-radius:4px;object-fit:cover;flex:0 0 auto;}
+.pb-satc__info{display:flex;flex-direction:column;min-width:0;flex:1;}
+.pb-satc__title{font-size:.82rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pb-satc__price{font-size:.82rem;color:var(--pb-gold);font-weight:600;}
+.pb-satc__btn{min-height:48px;flex:0 0 auto;}
+@media(min-width:990px){.pb-satc{display:none;}}
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "PB · Sticky Add to Cart",
+  "tag": "section",
+  "settings": [
+    { "type": "paragraph", "content": "Shows a mobile add-to-cart bar after the shopper scrolls. Add this section to the Product template." },
+    { "type": "text", "id": "label", "label": "Button label", "default": "Add to cart" },
+    { "type": "text", "id": "sold_out", "label": "Sold out label", "default": "Sold out" },
+    { "type": "range", "id": "reveal_after", "min": 200, "max": 1200, "step": 50, "unit": "px", "label": "Reveal after scrolling", "default": 600 }
+  ],
+  "presets": [ { "name": "PB · Sticky Add to Cart" } ],
+  "enabled_on": { "templates": ["product"] }
+}
+{% endschema %}

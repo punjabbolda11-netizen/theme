@@ -1,0 +1,94 @@
+{%- comment -%} Punjab Bolda · Hero — full-bleed editorial hero with dual CTA {%- endcomment -%}
+{%- liquid
+  assign s = section.settings
+  assign overlay = s.overlay | divided_by: 100.0
+-%}
+<section class="pb pb-hero" style="--pb-overlay:{{ overlay }};--pb-align:{{ s.align }};min-height:{{ s.height }};">
+  <div class="pb-hero__media">
+    {%- if s.image_mobile != blank -%}
+      <img class="pb-hero__img pb-hero__img--mobile"
+           src="{{ s.image_mobile | image_url: width: 1200 }}"
+           srcset="{{ s.image_mobile | image_url: width: 600 }} 600w, {{ s.image_mobile | image_url: width: 900 }} 900w, {{ s.image_mobile | image_url: width: 1200 }} 1200w"
+           sizes="100vw" width="{{ s.image_mobile.width }}" height="{{ s.image_mobile.height }}"
+           alt="{{ s.image_mobile.alt | escape | default: 'Punjab Bolda' }}" fetchpriority="high" loading="eager">
+    {%- endif -%}
+    {%- if s.image != blank -%}
+      <img class="pb-hero__img pb-hero__img--desktop"
+           src="{{ s.image | image_url: width: 2000 }}"
+           srcset="{{ s.image | image_url: width: 1200 }} 1200w, {{ s.image | image_url: width: 1800 }} 1800w, {{ s.image | image_url: width: 2400 }} 2400w"
+           sizes="100vw" width="{{ s.image.width }}" height="{{ s.image.height }}"
+           alt="{{ s.image.alt | escape | default: 'Punjab Bolda' }}" {% if s.image_mobile == blank %}fetchpriority="high" loading="eager"{% else %}loading="eager"{% endif %}>
+    {%- elsif s.image_mobile == blank -%}
+      <div class="pb-hero__placeholder">{{ 'lifestyle-1' | placeholder_svg_tag: 'pb-hero__ph' }}</div>
+    {%- endif -%}
+  </div>
+
+  <div class="pb-hero__inner pb-wrap">
+    <div class="pb-hero__content">
+      {%- if s.eyebrow != blank -%}<p class="pb-eyebrow pb-reveal" style="color:var(--pb-gold)">{{ s.eyebrow }}</p>{%- endif -%}
+      {%- if s.heading != blank -%}<h1 class="pb-hero__title pb-reveal" style="--pb-delay:80ms">{{ s.heading }}</h1>{%- endif -%}
+      {%- if s.subheading != blank -%}<p class="pb-hero__sub pb-reveal" style="--pb-delay:180ms">{{ s.subheading }}</p>{%- endif -%}
+      {%- if s.btn1_label != blank or s.btn2_label != blank -%}
+        <div class="pb-actions pb-reveal" style="--pb-delay:280ms">
+          {%- if s.btn1_label != blank -%}<a class="pb-btn pb-btn--light" href="{{ s.btn1_link | default: '#' }}">{{ s.btn1_label }}</a>{%- endif -%}
+          {%- if s.btn2_label != blank -%}<a class="pb-btn pb-btn--ghost pb-btn--on-dark" href="{{ s.btn2_link | default: '#' }}">{{ s.btn2_label }}</a>{%- endif -%}
+        </div>
+      {%- endif -%}
+    </div>
+  </div>
+
+  {%- if s.scroll_cue -%}<span class="pb-hero__cue" aria-hidden="true"></span>{%- endif -%}
+</section>
+
+{% stylesheet %}
+.pb-hero{position:relative;display:flex;align-items:flex-end;overflow:hidden;background:var(--pb-text);isolation:isolate;}
+.pb-hero__media{position:absolute;inset:0;z-index:-1;}
+.pb-hero__media::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,calc(var(--pb-overlay)*.5)) 0%,rgba(0,0,0,var(--pb-overlay)) 100%);}
+.pb-hero__img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;animation:pb-hero-zoom 14s var(--pb-ease-out) forwards;}
+.pb-hero__img--desktop{display:none;}
+.pb-hero__placeholder,.pb-hero__placeholder svg{position:absolute;inset:0;width:100%;height:100%;}
+@keyframes pb-hero-zoom{from{transform:scale(1.08)}to{transform:scale(1)}}
+.pb-hero__inner{position:relative;width:100%;padding-block:clamp(2.5rem,9vw,5.5rem);}
+.pb-hero__content{max-width:780px;color:#fff;text-align:var(--pb-align,left);}
+.pb-hero[style*="center"] .pb-hero__content{margin-inline:auto;}
+.pb-hero__title{font-family:var(--pb-font-heading);font-size:var(--pb-h1);line-height:.96;font-weight:600;letter-spacing:-.02em;text-wrap:balance;}
+.pb-hero__sub{margin:1.25rem 0 2rem;font-size:clamp(1rem,1.6vw,1.2rem);line-height:1.5;color:rgba(255,255,255,.86);max-width:46ch;}
+.pb-hero[style*="center"] .pb-hero__sub{margin-inline:auto;}
+.pb-hero__cue{position:absolute;left:50%;bottom:22px;width:1px;height:46px;background:rgba(255,255,255,.55);transform:translateX(-50%);overflow:hidden;}
+.pb-hero__cue::after{content:"";position:absolute;inset:0;background:var(--pb-gold);animation:pb-cue 2.2s var(--pb-ease) infinite;}
+@keyframes pb-cue{0%{transform:translateY(-100%)}60%,100%{transform:translateY(100%)}}
+@media(min-width:750px){
+  .pb-hero__img--mobile{display:none;}
+  .pb-hero__img--desktop{display:block;}
+}
+@media(prefers-reduced-motion:reduce){.pb-hero__img{animation:none;}.pb-hero__cue{display:none;}}
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "PB · Hero",
+  "tag": "section",
+  "settings": [
+    { "type": "header", "content": "Content" },
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "ROOTED IN CULTURE · DRIVEN BY PRIDE" },
+    { "type": "textarea", "id": "heading", "label": "Headline", "default": "PUNJAB IS NOT A PLACE. IT'S AN IDENTITY." },
+    { "type": "textarea", "id": "subheading", "label": "Subheadline", "default": "Modern Punjabi streetwear for the global generation." },
+    { "type": "header", "content": "Buttons" },
+    { "type": "text", "id": "btn1_label", "label": "Button 1 label", "default": "SHOP STREETWEAR" },
+    { "type": "url", "id": "btn1_link", "label": "Button 1 link" },
+    { "type": "text", "id": "btn2_label", "label": "Button 2 label", "default": "SHOP CAPS" },
+    { "type": "url", "id": "btn2_link", "label": "Button 2 link" },
+    { "type": "header", "content": "Media" },
+    { "type": "image_picker", "id": "image", "label": "Desktop image" },
+    { "type": "image_picker", "id": "image_mobile", "label": "Mobile image (portrait)" },
+    { "type": "header", "content": "Layout" },
+    { "type": "select", "id": "align", "label": "Text alignment", "options": [
+      { "value": "left", "label": "Left" }, { "value": "center", "label": "Center" } ], "default": "left" },
+    { "type": "select", "id": "height", "label": "Height", "options": [
+      { "value": "78svh", "label": "Tall" }, { "value": "90svh", "label": "Full screen" }, { "value": "100svh", "label": "Edge to edge" } ], "default": "90svh" },
+    { "type": "range", "id": "overlay", "min": 0, "max": 80, "step": 5, "unit": "%", "label": "Image darkening", "default": 35 },
+    { "type": "checkbox", "id": "scroll_cue", "label": "Show scroll indicator", "default": true }
+  ],
+  "presets": [ { "name": "PB · Hero" } ]
+}
+{% endschema %}

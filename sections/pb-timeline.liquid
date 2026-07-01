@@ -1,0 +1,74 @@
+{%- comment -%} Punjab Bolda · Punjab Through Generations — emotional timeline {%- endcomment -%}
+{%- liquid assign s = section.settings -%}
+<section class="pb pb-section pb-tl" style="background:{{ s.bg }};">
+  <div class="pb-wrap">
+    <header class="pb-tl__head pb-reveal">
+      {%- if s.eyebrow != blank -%}<p class="pb-eyebrow pb-eyebrow--center">{{ s.eyebrow }}</p>{%- endif -%}
+      {%- if s.heading != blank -%}<h2 class="pb-h2 pb-center">{{ s.heading }}</h2>{%- endif -%}
+      {%- if s.intro != blank -%}<p class="pb-lead pb-mt-1" style="margin-inline:auto;text-align:center">{{ s.intro }}</p>{%- endif -%}
+    </header>
+
+    <ol class="pb-tl__list">
+      {%- for block in section.blocks -%}
+        <li class="pb-tl__item pb-reveal" {{ block.shopify_attributes }} data-pb-stagger>
+          <span class="pb-tl__dot" aria-hidden="true"></span>
+          <div class="pb-tl__card">
+            {%- if block.settings.era != blank -%}<span class="pb-tl__era">{{ block.settings.era }}</span>{%- endif -%}
+            <h3 class="pb-tl__title">{{ block.settings.title }}</h3>
+            {%- if block.settings.text != blank -%}<p class="pb-tl__text">{{ block.settings.text }}</p>{%- endif -%}
+          </div>
+        </li>
+      {%- endfor -%}
+    </ol>
+  </div>
+</section>
+
+{% stylesheet %}
+.pb-tl__head{max-width:680px;margin-inline:auto;margin-bottom:clamp(2.5rem,6vw,4.5rem);}
+.pb-tl__list{list-style:none;margin:0;padding:0;position:relative;}
+.pb-tl__list::before{content:"";position:absolute;left:9px;top:6px;bottom:6px;width:1px;background:var(--pb-line-strong);}
+.pb-tl__item{position:relative;padding:0 0 clamp(2rem,4vw,3rem) 44px;}
+.pb-tl__item:last-child{padding-bottom:0;}
+.pb-tl__dot{position:absolute;left:0;top:6px;width:19px;height:19px;border-radius:50%;background:var(--pb-bg);border:2px solid var(--pb-gold);}
+.pb-tl__dot::after{content:"";position:absolute;inset:4px;border-radius:50%;background:var(--pb-gold);}
+.pb-tl__era{display:inline-block;font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;font-weight:700;color:var(--pb-gold);margin-bottom:.5rem;}
+.pb-tl__title{font-family:var(--pb-font-heading);font-size:clamp(1.4rem,3vw,2rem);font-weight:600;line-height:1.05;margin:0 0 .5rem;}
+.pb-tl__text{font-size:var(--pb-body);line-height:1.7;color:var(--pb-muted);max-width:60ch;margin:0;}
+@media(min-width:850px){
+  .pb-tl__list::before{left:50%;transform:translateX(-50%);}
+  .pb-tl__item{width:50%;padding-left:0;padding-right:44px;text-align:right;}
+  .pb-tl__item:nth-child(even){margin-left:50%;padding-right:0;padding-left:44px;text-align:left;}
+  .pb-tl__dot{left:auto;right:-10px;}
+  .pb-tl__item:nth-child(even) .pb-tl__dot{left:-10px;right:auto;}
+  .pb-tl__text{margin-left:auto;}
+  .pb-tl__item:nth-child(even) .pb-tl__text{margin-left:0;}
+}
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "PB · Timeline",
+  "tag": "section",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "PUNJAB THROUGH GENERATIONS" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "A heritage that travels with us." },
+    { "type": "textarea", "id": "intro", "label": "Intro", "default": "Five chapters. One identity. From the soil of our ancestors to the cities we now call home." },
+    { "type": "color", "id": "bg", "label": "Background", "default": "#EEE1D3" }
+  ],
+  "blocks": [
+    { "type": "milestone", "name": "Milestone", "settings": [
+      { "type": "text", "id": "era", "label": "Era label", "default": "Chapter 01" },
+      { "type": "text", "id": "title", "label": "Title", "default": "Roots" },
+      { "type": "textarea", "id": "text", "label": "Text", "default": "Born of the five rivers — land, faith and family forged a people who never bend." }
+    ] }
+  ],
+  "max_blocks": 6,
+  "presets": [ { "name": "PB · Timeline", "blocks": [
+    { "type": "milestone", "settings": { "era": "Chapter 01", "title": "Roots", "text": "Born of the five rivers — land, faith and family forged a people who never bend." } },
+    { "type": "milestone", "settings": { "era": "Chapter 02", "title": "Culture", "text": "Bhangra, boliyan and a language that sings. Our culture became impossible to ignore." } },
+    { "type": "milestone", "settings": { "era": "Chapter 03", "title": "Migration", "text": "We crossed oceans carrying nothing but pride — and planted Punjab in every corner of the world." } },
+    { "type": "milestone", "settings": { "era": "Chapter 04", "title": "Modern Identity", "text": "A new generation remixes heritage with the streets — unapologetically Punjabi, unmistakably global." } },
+    { "type": "milestone", "settings": { "era": "Chapter 05", "title": "The Future", "text": "We are not the last of something old. We are the first of something timeless." } }
+  ] } ]
+}
+{% endschema %}

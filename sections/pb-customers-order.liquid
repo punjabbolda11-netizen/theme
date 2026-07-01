@@ -1,0 +1,83 @@
+{%- comment -%} Punjab Bolda · Order detail — native order object {%- endcomment -%}
+{%- liquid assign s = section.settings -%}
+<section class="pb pb-account" style="background:{{ s.bg }};">
+  <div class="pb-wrap">
+    <header class="pb-account__head">
+      <div>
+        <p class="pb-eyebrow">Order {{ order.name }}</p>
+        <h1 class="pb-h2">Order details</h1>
+        <p class="pb-lead pb-mt-1">Placed {{ order.created_at | date: '%B %d, %Y' }}
+          {%- if order.cancelled %} · <span class="pb-badge pb-badge--pending">Cancelled {{ order.cancelled_at | date: '%b %d, %Y' }}</span>{%- endif -%}
+        </p>
+      </div>
+      <a class="pb-account__logout" href="{{ routes.account_url }}">{% render 'pb-icon', icon: 'arrow-left' %} Back to account</a>
+    </header>
+
+    {%- if order.cancelled and order.cancel_reason != blank -%}
+      <div class="pb-auth__errors" style="max-width:none;">Order cancelled: {{ order.cancel_reason_label }}</div>
+    {%- endif -%}
+
+    <div class="pb-account__grid">
+      <div class="pb-account__main">
+        <div class="pb-account__tablewrap">
+          <table class="pb-table">
+            <thead><tr><th>Item</th><th>Price</th><th>Qty</th><th>Total</th></tr></thead>
+            <tbody>
+              {%- for item in order.line_items -%}
+                <tr>
+                  <td>
+                    <a href="{{ item.product.url }}" style="font-weight:600;">{{ item.title }}</a>
+                    {%- if item.fulfillment -%}<div style="font-size:.76rem;color:var(--pb-muted);margin-top:.3rem;">Fulfilled {{ item.fulfillment.created_at | date: '%b %d' }}{% if item.fulfillment.tracking_url %} · <a href="{{ item.fulfillment.tracking_url }}" target="_blank" rel="noopener">Track</a>{% endif %}</div>{%- endif -%}
+                    {%- for d in item.line_level_discount_allocations -%}<div style="font-size:.76rem;color:var(--pb-gold);">{{ d.discount_application.title }} (−{{ d.amount | money }})</div>{%- endfor -%}
+                  </td>
+                  <td>{{ item.price | money }}</td>
+                  <td>{{ item.quantity }}</td>
+                  <td>{{ item.final_line_price | money }}</td>
+                </tr>
+              {%- endfor -%}
+            </tbody>
+            <tfoot>
+              <tr><td colspan="3" style="text-align:right;">Subtotal</td><td>{{ order.line_items_subtotal_price | money }}</td></tr>
+              {%- for d in order.cart_level_discount_applications -%}
+                <tr><td colspan="3" style="text-align:right;color:var(--pb-gold);">{{ d.title }}</td><td style="color:var(--pb-gold);">−{{ d.total_allocated_amount | money }}</td></tr>
+              {%- endfor -%}
+              {%- for line in order.shipping_methods -%}
+                <tr><td colspan="3" style="text-align:right;">Shipping ({{ line.title }})</td><td>{{ line.price | money }}</td></tr>
+              {%- endfor -%}
+              {%- for tax in order.tax_lines -%}
+                <tr><td colspan="3" style="text-align:right;">{{ tax.title }} ({{ tax.rate | times: 100 }}%)</td><td>{{ tax.price | money }}</td></tr>
+              {%- endfor -%}
+              <tr><td colspan="3" style="text-align:right;font-weight:700;">Total</td><td style="font-weight:700;">{{ order.total_price | money }} {{ order.currency }}</td></tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+      <aside class="pb-account__aside">
+        <div class="pb-order__addr-grid">
+          <div class="pb-aside-card">
+            <h2 class="pb-panel__title" style="font-size:1rem;">Shipping</h2>
+            {%- if order.shipping_address -%}<address>{{ order.shipping_address | format_address }}</address>{%- else -%}<p style="color:var(--pb-muted);font-size:.9rem;">—</p>{%- endif -%}
+            <p style="margin-top:.8rem;"><span class="pb-badge pb-badge--{{ order.fulfillment_status }}">{{ order.fulfillment_status_label }}</span></p>
+          </div>
+          <div class="pb-aside-card">
+            <h2 class="pb-panel__title" style="font-size:1rem;">Billing</h2>
+            {%- if order.billing_address -%}<address>{{ order.billing_address | format_address }}</address>{%- else -%}<p style="color:var(--pb-muted);font-size:.9rem;">—</p>{%- endif -%}
+            <p style="margin-top:.8rem;"><span class="pb-badge pb-badge--{{ order.financial_status }}">{{ order.financial_status_label }}</span></p>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "PB · Order",
+  "tag": "section",
+  "settings": [
+    { "type": "color", "id": "bg", "label": "Background", "default": "#F5F1E8" }
+  ],
+  "presets": [ { "name": "PB · Order" } ]
+}
+{% endschema %}
