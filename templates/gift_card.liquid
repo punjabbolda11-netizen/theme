@@ -1,0 +1,86 @@
+{%- comment -%}
+  Punjab Bolda · Gift Card template
+  Self-contained (own tokens + styles) so it renders correctly whether or not a
+  dedicated layout/gift_card.liquid exists. Uses native gift_card object.
+{%- endcomment -%}
+<div class="pbg">
+  <div class="pbg__card">
+    <div class="pbg__brand">
+      {%- if settings.logo != blank -%}
+        <img src="{{ settings.logo | image_url: width: 360 }}" alt="{{ shop.name | escape }}" width="160">
+      {%- else -%}
+        <span class="pbg__wordmark">{{ shop.name }}</span>
+      {%- endif -%}
+    </div>
+
+    <p class="pbg__eyebrow">{% if gift_card.expired %}Expired gift card{% else %}Gift card{% endif %}</p>
+    <p class="pbg__balance">{{ gift_card.balance | money }}</p>
+    {%- if gift_card.balance != gift_card.initial_value -%}
+      <p class="pbg__initial">Initial value {{ gift_card.initial_value | money }}</p>
+    {%- endif -%}
+
+    <div class="pbg__qr-wrap">
+      <div class="pbg__qr" id="pbg-qr" data-code="{{ gift_card.qr_identifier | default: gift_card.code }}"></div>
+    </div>
+
+    <div class="pbg__code" data-pb-code="{{ gift_card.code | strip }}">
+      <span>{{ gift_card.code | format_code }}</span>
+      <button type="button" class="pbg__copy" data-pb-copy aria-label="Copy code">Copy</button>
+    </div>
+
+    {%- if gift_card.expired -%}
+      <p class="pbg__note pbg__note--warn">This gift card has expired{% if gift_card.expires_on %} on {{ gift_card.expires_on | date: '%B %d, %Y' }}{% endif %}.</p>
+    {%- elsif gift_card.expires_on -%}
+      <p class="pbg__note">Valid until {{ gift_card.expires_on | date: '%B %d, %Y' }}.</p>
+    {%- endif -%}
+
+    <div class="pbg__actions">
+      <a class="pbg__btn pbg__btn--gold" href="{{ shop.url }}">Shop now</a>
+      {%- if gift_card.pass_url -%}<a class="pbg__btn pbg__btn--ghost" href="{{ gift_card.pass_url }}">Add to Apple Wallet</a>{%- endif -%}
+      <button type="button" class="pbg__btn pbg__btn--ghost" onclick="window.print()">Print</button>
+    </div>
+
+    <p class="pbg__tagline">Rooted in culture. Driven by pride.</p>
+  </div>
+</div>
+
+<script>
+(function(){
+  var btn=document.querySelector('[data-pb-copy]');
+  if(btn){btn.addEventListener('click',function(){
+    var code=document.querySelector('[data-pb-code]').getAttribute('data-pb-code');
+    navigator.clipboard.writeText(code).then(function(){btn.textContent='Copied';setTimeout(function(){btn.textContent='Copy';},1600);}).catch(function(){});
+  });}
+  // Lightweight QR via Shopify's hosted generator endpoint (no third-party, no library)
+  var qr=document.getElementById('pbg-qr');
+  if(qr){
+    var img=new Image();img.width=160;img.height=160;img.alt='Gift card QR code';
+    img.src='{{ shop.url }}/services/gift_card/qr/'+qr.dataset.code;
+    img.onerror=function(){qr.style.display='none';};
+    qr.appendChild(img);
+  }
+}());
+</script>
+
+<style>
+  .pbg{--g:#D4AF37;--bg:#F5F1E8;--ink:#111;min-height:100vh;display:grid;place-items:center;padding:2rem 1.25rem;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Helvetica,Arial,sans-serif;color:var(--ink);}
+  .pbg__card{width:100%;max-width:440px;background:#fff;border:1px solid rgba(17,17,17,.1);border-radius:14px;padding:2.4rem 2rem;text-align:center;box-shadow:0 24px 60px -30px rgba(0,0,0,.35);}
+  .pbg__brand{margin-bottom:1.6rem;}
+  .pbg__wordmark{font-family:"Playfair Display",Georgia,serif;font-size:1.5rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;}
+  .pbg__eyebrow{font-size:.68rem;letter-spacing:.24em;text-transform:uppercase;font-weight:600;color:var(--g);margin:0 0 .4rem;}
+  .pbg__balance{font-family:"Playfair Display",Georgia,serif;font-size:3.4rem;font-weight:700;line-height:1;margin:0;}
+  .pbg__initial{color:#6f6f6f;font-size:.82rem;margin:.4rem 0 0;}
+  .pbg__qr-wrap{margin:1.6rem 0;}
+  .pbg__qr{display:inline-grid;place-items:center;min-height:160px;}
+  .pbg__qr img{border:1px solid rgba(17,17,17,.08);border-radius:8px;}
+  .pbg__code{display:flex;align-items:center;justify-content:space-between;gap:.5rem;border:1px dashed rgba(17,17,17,.3);border-radius:8px;padding:.7rem 1rem;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:1.05rem;letter-spacing:.05em;}
+  .pbg__copy{background:var(--ink);color:#fff;border:0;border-radius:5px;padding:.45rem .8rem;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;}
+  .pbg__note{font-size:.8rem;color:#6f6f6f;margin:1rem 0 0;}
+  .pbg__note--warn{color:#b23b3b;}
+  .pbg__actions{display:grid;gap:.6rem;margin-top:1.6rem;}
+  .pbg__btn{display:inline-flex;align-items:center;justify-content:center;min-height:50px;border-radius:6px;font-size:.78rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;text-decoration:none;cursor:pointer;border:1px solid;}
+  .pbg__btn--gold{background:var(--g);border-color:var(--g);color:#1a1407;}
+  .pbg__btn--ghost{background:transparent;border-color:rgba(17,17,17,.25);color:var(--ink);}
+  .pbg__tagline{margin-top:1.6rem;font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;color:#6f6f6f;}
+  @media print{.pbg{background:#fff;}.pbg__card{box-shadow:none;border:none;}.pbg__actions,.pbg__copy{display:none;}}
+</style>

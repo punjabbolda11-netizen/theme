@@ -1,0 +1,13 @@
+{
+  "sections": {
+    "pb_cart": {
+      "type": "pb-cart",
+      "settings": {
+        "show_free_ship": true,
+        "free_ship_threshold": 120,
+        "show_note": true
+      }
+    }
+  },
+  "order": ["pb_cart"]
+}

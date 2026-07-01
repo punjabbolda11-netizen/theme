@@ -1,0 +1,14 @@
+{
+  "sections": {
+    "pb_article": {
+      "type": "pb-article",
+      "settings": {
+        "show_image": true,
+        "show_breadcrumb": true,
+        "show_share": true,
+        "show_comments": true
+      }
+    }
+  },
+  "order": ["pb_article"]
+}

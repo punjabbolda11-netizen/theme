@@ -1,0 +1,11 @@
+{
+  "sections": {
+    "pb_page": {
+      "type": "pb-page",
+      "settings": {
+        "show_breadcrumb": true
+      }
+    }
+  },
+  "order": ["pb_page"]
+}

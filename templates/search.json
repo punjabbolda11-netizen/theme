@@ -1,0 +1,13 @@
+{
+  "sections": {
+    "pb_search": {
+      "type": "pb-search",
+      "settings": {
+        "per_page": 24,
+        "show_filters": true,
+        "quick_add": true
+      }
+    }
+  },
+  "order": ["pb_search"]
+}

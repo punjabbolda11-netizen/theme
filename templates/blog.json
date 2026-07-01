@@ -1,0 +1,16 @@
+{
+  "sections": {
+    "pb_blog": {
+      "type": "pb-blog-posts",
+      "settings": {
+        "eyebrow": "THE JOURNAL",
+        "intro": "Stories from the culture — heritage, style and the people repping Punjab worldwide.",
+        "feature_first": true,
+        "show_excerpt": true,
+        "show_author": true,
+        "per_page": 9
+      }
+    }
+  },
+  "order": ["pb_blog"]
+}
