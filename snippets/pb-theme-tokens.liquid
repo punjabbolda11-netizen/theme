@@ -1,0 +1,37 @@
+{%- comment -%}
+  Punjab Bolda · Theme tokens
+  Maps global theme settings → the CSS variables every PB section consumes.
+  Include in <head> of layout/theme.liquid AFTER pb-base.css so it overrides defaults:
+    {% render 'pb-theme-tokens' %}
+  (Optional) also include in layout/password.liquid.
+  Requires the PB settings group (see config/pb-settings-schema-patch.json).
+{%- endcomment -%}
+{%- liquid
+  assign hf = settings.pb_heading_font
+  assign bf = settings.pb_body_font
+-%}
+<style>
+  {%- if hf -%}
+    {{ hf | font_face: font_display: 'swap' }}
+    {%- assign hf_bold = hf | font_modify: 'weight', '600' -%}
+    {%- if hf_bold -%}{{ hf_bold | font_face: font_display: 'swap' }}{%- endif -%}
+  {%- endif -%}
+  {%- if bf -%}
+    {{ bf | font_face: font_display: 'swap' }}
+    {%- assign bf_bold = bf | font_modify: 'weight', '600' -%}
+    {%- if bf_bold -%}{{ bf_bold | font_face: font_display: 'swap' }}{%- endif -%}
+  {%- endif -%}
+  :root{
+    {% if settings.pb_bg %}--pb-bg:{{ settings.pb_bg }};{% endif %}
+    {% if settings.pb_bg_secondary %}--pb-bg-secondary:{{ settings.pb_bg_secondary }};{% endif %}
+    {% if settings.pb_text %}--pb-text:{{ settings.pb_text }};{% endif %}
+    {% if settings.pb_gold %}--pb-gold:{{ settings.pb_gold }};--pb-gold-soft:{{ settings.pb_gold | color_modify: 'alpha', 0.14 }};{% endif %}
+    {% if settings.pb_muted %}--pb-muted:{{ settings.pb_muted }};{% endif %}
+    {% if settings.pb_card %}--pb-card:{{ settings.pb_card }};{% endif %}
+    {% if settings.pb_text %}--pb-line:{{ settings.pb_text | color_modify: 'alpha', 0.10 }};--pb-line-strong:{{ settings.pb_text | color_modify: 'alpha', 0.18 }};{% endif %}
+    {% if hf %}--pb-font-heading:{{ hf.family }}, {{ hf.fallback_families }};{% endif %}
+    {% if bf %}--pb-font-body:{{ bf.family }}, {{ bf.fallback_families }};{% endif %}
+    {% if settings.pb_radius %}--pb-radius:{{ settings.pb_radius }}px;--pb-radius-lg:{{ settings.pb_radius | plus: 4 }}px;{% endif %}
+    {% if settings.pb_maxwidth %}--pb-maxw:{{ settings.pb_maxwidth }}px;{% endif %}
+  }
+</style>

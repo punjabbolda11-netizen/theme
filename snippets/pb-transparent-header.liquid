@@ -1,0 +1,46 @@
+{%- comment -%}
+  Punjab Bolda · Transparent-header-over-hero enhancer
+  Horizon already ships a sticky header. This snippet makes it transparent while
+  the PB hero is in view and solid once the shopper scrolls past it.
+  Include ONCE at the very end of <body> in theme.liquid:
+    {% render 'pb-transparent-header' %}
+  Only activates on templates whose first section is the PB hero (the homepage).
+{%- endcomment -%}
+{%- if template == 'index' -%}
+<style>
+  /* Lift content under the header only when transparent mode is active */
+  body.pb-th--transparent .shopify-section-group-header-group,
+  body.pb-th--transparent [data-section-type="header"],
+  body.pb-th--transparent .header-wrapper,
+  body.pb-th--transparent header.header {
+    position: fixed; inset-inline: 0; top: 0; z-index: 50;
+    background: transparent !important; box-shadow: none !important;
+    transition: background .4s var(--pb-ease), color .4s var(--pb-ease), box-shadow .4s var(--pb-ease);
+  }
+  body.pb-th--transparent.pb-th--at-top .header *,
+  body.pb-th--transparent.pb-th--at-top .header-wrapper * { color: #fff !important; }
+  body.pb-th--transparent.pb-th--at-top .header svg { color: #fff !important; }
+
+  /* Solid state once scrolled past hero */
+  body.pb-th--transparent.pb-th--solid .shopify-section-group-header-group,
+  body.pb-th--transparent.pb-th--solid [data-section-type="header"],
+  body.pb-th--transparent.pb-th--solid .header-wrapper,
+  body.pb-th--transparent.pb-th--solid header.header {
+    background: var(--pb-bg, #F5F1E8) !important;
+    box-shadow: 0 6px 24px -18px rgba(0,0,0,.4) !important;
+  }
+</style>
+<script>
+(function(){
+  var hero=document.querySelector('.pb-hero');
+  if(!hero)return;
+  document.body.classList.add('pb-th--transparent','pb-th--at-top');
+  var io=new IntersectionObserver(function(e){
+    var past=!e[0].isIntersecting;
+    document.body.classList.toggle('pb-th--solid',past);
+    document.body.classList.toggle('pb-th--at-top',!past);
+  },{rootMargin:'-72px 0px 0px 0px',threshold:0});
+  io.observe(hero);
+})();
+</script>
+{%- endif -%}

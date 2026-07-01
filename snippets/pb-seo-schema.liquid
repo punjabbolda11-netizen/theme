@@ -1,0 +1,138 @@
+{%- comment -%}
+  Punjab Bolda · SEO architecture
+  Include high in <head> of theme.liquid (after <meta charset>):
+    {% render 'pb-seo-schema' %}
+  Emits Open Graph + JSON-LD for Organization, Website, Product, Collection, Breadcrumbs.
+  Pair with the FAQ schema block by passing faq blocks (see pb-faq.liquid).
+{%- endcomment -%}
+
+{%- liquid
+  assign og_title = page_title | default: shop.name
+  assign og_desc = page_description | default: shop.description | default: shop.name
+  assign og_img = ''
+  if template contains 'product' and product.featured_media
+    assign og_img = product.featured_media | image_url: width: 1200
+  elsif template contains 'collection' and collection.featured_image
+    assign og_img = collection.featured_image | image_url: width: 1200
+  elsif settings.share_image
+    assign og_img = settings.share_image | image_url: width: 1200
+  endif
+-%}
+
+{%- comment -%} ---- Open Graph + Twitter ---- {%- endcomment -%}
+<meta property="og:site_name" content="{{ shop.name | escape }}">
+<meta property="og:type" content="{% if template contains 'product' %}product{% else %}website{% endif %}">
+<meta property="og:title" content="{{ og_title | escape }}">
+<meta property="og:description" content="{{ og_desc | escape }}">
+<meta property="og:url" content="{{ canonical_url }}">
+{%- if og_img != blank -%}
+<meta property="og:image" content="https:{{ og_img }}">
+<meta property="og:image:width" content="1200">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https:{{ og_img }}">
+{%- else -%}
+<meta name="twitter:card" content="summary">
+{%- endif -%}
+<meta name="twitter:title" content="{{ og_title | escape }}">
+<meta name="twitter:description" content="{{ og_desc | escape }}">
+
+{%- comment -%} ---- Organization + Website (emit once, on home) ---- {%- endcomment -%}
+{%- if template == 'index' -%}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": {{ shop.name | json }},
+  "url": {{ shop.url | json }},
+  {% if settings.logo %}"logo": "https:{{ settings.logo | image_url: width: 400 }}",{% endif %}
+  "slogan": "Rooted in culture. Driven by pride.",
+  "description": {{ shop.description | default: 'Modern Punjabi streetwear for the global generation.' | json }},
+  "sameAs": [
+    {{ settings.social_instagram_link | json }},
+    {{ settings.social_tiktok_link | json }},
+    {{ settings.social_youtube_link | json }},
+    {{ settings.social_facebook_link | json }}
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": {{ shop.name | json }},
+  "url": {{ shop.url | json }},
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "{{ shop.url }}/search?q={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>
+{%- endif -%}
+
+{%- comment -%} ---- Product schema ---- {%- endcomment -%}
+{%- if template contains 'product' and product != blank -%}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": {{ product.title | json }},
+  "description": {{ product.description | strip_html | truncatewords: 60 | json }},
+  {% if product.featured_media %}"image": ["https:{{ product.featured_media | image_url: width: 1200 }}"],{% endif %}
+  "brand": { "@type": "Brand", "name": {{ shop.name | json }} },
+  "sku": {{ product.selected_or_first_available_variant.sku | default: product.id | json }},
+  {% if product.metafields.reviews.rating.value != blank %}"aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "{{ product.metafields.reviews.rating.value }}",
+    "reviewCount": "{{ product.metafields.reviews.rating_count | default: 1 }}"
+  },{% endif %}
+  "offers": {
+    "@type": "{% if product.variants.size > 1 %}AggregateOffer{% else %}Offer{% endif %}",
+    "priceCurrency": {{ cart.currency.iso_code | json }},
+    {% if product.variants.size > 1 %}
+      "lowPrice": "{{ product.price_min | divided_by: 100.0 }}",
+      "highPrice": "{{ product.price_max | divided_by: 100.0 }}",
+      "offerCount": "{{ product.variants.size }}",
+    {% else %}
+      "price": "{{ product.price | divided_by: 100.0 }}",
+    {% endif %}
+    "availability": "https://schema.org/{% if product.available %}InStock{% else %}OutOfStock{% endif %}",
+    "url": "{{ shop.url }}{{ product.url }}"
+  }
+}
+</script>
+{%- endif -%}
+
+{%- comment -%} ---- Collection schema ---- {%- endcomment -%}
+{%- if template contains 'collection' and collection != blank -%}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": {{ collection.title | json }},
+  "description": {{ collection.description | strip_html | truncatewords: 50 | json }},
+  "url": "{{ shop.url }}{{ collection.url }}"
+}
+</script>
+{%- endif -%}
+
+{%- comment -%} ---- Breadcrumb schema ---- {%- endcomment -%}
+{%- unless template == 'index' -%}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": {{ shop.url | json }} }
+    {%- if template contains 'product' -%}
+      {%- if collection -%},{ "@type": "ListItem", "position": 2, "name": {{ collection.title | json }}, "item": "{{ shop.url }}{{ collection.url }}" }{%- endif -%}
+      ,{ "@type": "ListItem", "position": {% if collection %}3{% else %}2{% endif %}, "name": {{ product.title | json }}, "item": "{{ shop.url }}{{ product.url }}" }
+    {%- elsif template contains 'collection' -%}
+      ,{ "@type": "ListItem", "position": 2, "name": {{ collection.title | json }}, "item": "{{ shop.url }}{{ collection.url }}" }
+    {%- elsif template contains 'page' -%}
+      ,{ "@type": "ListItem", "position": 2, "name": {{ page.title | json }}, "item": "{{ shop.url }}{{ page.url }}" }
+    {%- endif -%}
+  ]
+}
+</script>
+{%- endunless -%}

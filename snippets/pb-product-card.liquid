@@ -1,0 +1,55 @@
+{%- comment -%}
+  Punjab Bolda · Product Card
+  Usage: {% render 'pb-product-card', product: product, quick_add: true %}
+{%- endcomment -%}
+{%- liquid
+  assign p = product
+  assign featured = p.featured_media
+  assign second = p.media[1]
+  assign on_sale = false
+  if p.compare_at_price > p.price
+    assign on_sale = true
+  endif
+-%}
+<article class="pb-card pb-reveal" data-pb-stagger>
+  <a class="pb-card__media pb-media pb-zoom" href="{{ p.url }}" aria-label="{{ p.title | escape }}">
+    {%- if featured -%}
+      <img class="pb-card__img"
+           src="{{ featured | image_url: width: 600 }}"
+           srcset="{{ featured | image_url: width: 300 }} 300w, {{ featured | image_url: width: 600 }} 600w, {{ featured | image_url: width: 900 }} 900w"
+           sizes="(min-width:990px) 24vw, (min-width:750px) 33vw, 78vw"
+           width="{{ featured.width }}" height="{{ featured.height }}"
+           alt="{{ featured.alt | escape | default: p.title | escape }}" loading="lazy">
+    {%- else -%}
+      {{ 'product-1' | placeholder_svg_tag: 'pb-card__ph' }}
+    {%- endif -%}
+    {%- if second -%}
+      <img class="pb-card__img pb-card__img--alt" src="{{ second | image_url: width: 600 }}"
+           sizes="(min-width:990px) 24vw, (min-width:750px) 33vw, 78vw"
+           width="{{ second.width }}" height="{{ second.height }}" alt="" loading="lazy" aria-hidden="true">
+    {%- endif -%}
+    {%- if on_sale -%}<span class="pb-tag pb-tag--sale">Sale</span>
+    {%- elsif p.tags contains 'New' or p.tags contains 'new' -%}<span class="pb-tag">New</span>{%- endif -%}
+    {%- unless p.available -%}<span class="pb-tag pb-tag--out">Sold out</span>{%- endunless -%}
+  </a>
+
+  <div class="pb-card__body">
+    {%- if p.type != blank -%}<p class="pb-card__type">{{ p.type }}</p>{%- endif -%}
+    <h3 class="pb-card__title"><a href="{{ p.url }}">{{ p.title }}</a></h3>
+    <p class="pb-card__price">
+      {%- if on_sale -%}<s>{{ p.compare_at_price | money }}</s> {% endif -%}
+      <span{% if on_sale %} class="pb-card__price--now"{% endif %}>{{ p.price | money }}</span>
+    </p>
+
+    {%- if quick_add and p.available -%}
+      {%- if p.has_only_default_variant -%}
+        <form method="post" action="{{ routes.cart_add_url }}" class="pb-card__form" data-pb-quickadd>
+          <input type="hidden" name="id" value="{{ p.selected_or_first_available_variant.id }}">
+          <button type="submit" class="pb-card__add">{% render 'pb-icon', icon: 'bag' %}<span>Add</span></button>
+        </form>
+      {%- else -%}
+        <a href="{{ p.url }}" class="pb-card__add pb-card__add--link">{% render 'pb-icon', icon: 'bag' %}<span>Choose options</span></a>
+      {%- endif -%}
+    {%- endif -%}
+  </div>
+</article>
