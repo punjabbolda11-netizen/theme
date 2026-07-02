@@ -18,9 +18,20 @@
   if s.premium_collection != blank
     assign premium_collection_url = s.premium_collection.url
   endif
+  assign is_premium = false
+  if template.suffix == 'premium'
+    assign is_premium = true
+  endif
+  if is_premium
+    assign header_vars = '--pb-h-bg:var(--pb-bg);--pb-h-fg:var(--pb-text);--pb-h-accent:var(--pb-gold);'
+  else
+    capture header_vars
+      echo '--pb-h-bg:' | append: s.bg | append: ';--pb-h-fg:' | append: s.fg | append: ';--pb-h-accent:' | append: s.accent | append: ';'
+    endcapture
+  endif
 -%}
 <header class="pb pb-header{% if overlay %} pb-header--can-overlay{% endif %}" data-pb-header
-        style="--pb-h-bg:{{ s.bg }};--pb-h-fg:{{ s.fg }};--pb-h-accent:{{ s.accent }};">
+        style="{{ header_vars }}">
   <a class="pb-skip-link" href="#MainContent">Skip to content</a>
   <div class="pb-header__bar pb-wrap">
 
@@ -60,13 +71,15 @@
           <span class="pb-header__wordmark">{{ s.brand | default: shop.name }}</span>
         {%- endif -%}
       </a>
-      <div class="pb-header__lines" data-pb-line-toggle
-           data-everyday-url="{{ s.everyday_url | default: routes.root_url }}"
-           data-premium-url="{{ premium_collection_url | default: '#' }}">
-        <button type="button" class="pb-header__line" data-pb-line-btn="everyday">Everyday</button>
+      <nav class="pb-header__lines" aria-label="Product line">
+        <a class="pb-header__line{% unless is_premium %} is-active{% endunless %}"
+           href="{{ s.everyday_url | default: routes.root_url }}"
+           {% unless is_premium %}aria-current="true"{% endunless %}>Everyday</a>
         <span class="pb-header__line-divider" aria-hidden="true">/</span>
-        <button type="button" class="pb-header__line" data-pb-line-btn="premium">Premium</button>
-      </div>
+        <a class="pb-header__line{% if is_premium %} is-active{% endif %}"
+           href="{{ premium_collection_url | default: '#' }}"
+           {% if is_premium %}aria-current="true"{% endif %}>Premium</a>
+      </nav>
     </div>
 
     {%- comment -%} Right: search + account + cart {%- endcomment -%}
@@ -109,7 +122,7 @@
 {%- comment -%} ---- Mobile navigation drawer ---- {%- endcomment -%}
 <div class="pb pb-drawer" id="pb-drawer" data-pb-drawer hidden>
   <div class="pb-drawer__overlay" data-pb-drawer-close></div>
-  <aside class="pb-drawer__panel" role="dialog" aria-modal="true" aria-label="Menu" style="--pb-h-bg:{{ s.bg }};--pb-h-fg:{{ s.fg }};--pb-h-accent:{{ s.accent }};">
+  <aside class="pb-drawer__panel" role="dialog" aria-modal="true" aria-label="Menu" style="{{ header_vars }}">
     <div class="pb-drawer__head">
       <span class="pb-drawer__brand">{{ s.brand | default: shop.name }}</span>
       <button type="button" class="pb-header__icon" data-pb-drawer-close aria-label="Close menu">{% render 'pb-icon', icon: 'close' %}</button>
@@ -222,51 +235,6 @@
   }
   document.addEventListener('pb:cart:updated',refreshCount);
   document.addEventListener('cart:refresh',refreshCount);
-
-  /* ---- Everyday / Premium line toggle ---- */
-  var lineToggle=header.querySelector('[data-pb-line-toggle]');
-  if(lineToggle){
-    var everydayUrl=lineToggle.getAttribute('data-everyday-url');
-    var premiumUrl=lineToggle.getAttribute('data-premium-url');
-    function setLineUI(line){
-      lineToggle.querySelectorAll('[data-pb-line-btn]').forEach(function(btn){
-        var active=btn.getAttribute('data-pb-line-btn')===line;
-        btn.classList.toggle('is-active',active);
-        btn.setAttribute('aria-current',active?'true':'false');
-      });
-    }
-    var drawerPanel=document.querySelector('.pb-drawer__panel');
-    function applyLine(line){
-      var targets=[header,drawerPanel].filter(Boolean);
-      targets.forEach(function(el){
-        if(line==='premium'){
-          el.style.setProperty('--pb-h-bg','var(--pb-bg)');
-          el.style.setProperty('--pb-h-fg','var(--pb-text)');
-          el.style.setProperty('--pb-h-accent','var(--pb-gold)');
-        } else {
-          el.style.removeProperty('--pb-h-bg');
-          el.style.removeProperty('--pb-h-fg');
-          el.style.removeProperty('--pb-h-accent');
-        }
-      });
-    }
-    var currentLine='everyday';
-    try{currentLine=localStorage.getItem('pb-line')==='premium'?'premium':'everyday';}catch(e){}
-    setLineUI(currentLine);
-    applyLine(currentLine);
-    lineToggle.querySelector('[data-pb-line-btn="premium"]').addEventListener('click',function(){
-      try{localStorage.setItem('pb-line','premium');}catch(e){}
-      document.documentElement.setAttribute('data-pb-line','premium');
-      applyLine('premium');
-      window.location.href=premiumUrl;
-    });
-    lineToggle.querySelector('[data-pb-line-btn="everyday"]').addEventListener('click',function(){
-      try{localStorage.setItem('pb-line','everyday');}catch(e){}
-      document.documentElement.removeAttribute('data-pb-line');
-      applyLine('everyday');
-      window.location.href=everydayUrl;
-    });
-  }
 })();
 </script>
 
@@ -282,7 +250,7 @@
 .pb-header__logo a{display:inline-flex;align-items:center;color:inherit;text-decoration:none;}
 .pb-header__wordmark{font-family:var(--pb-font-heading);font-size:clamp(1.25rem,3.5vw,1.7rem);font-weight:700;letter-spacing:.04em;text-transform:uppercase;}
 .pb-header__lines{display:flex;align-items:center;gap:.4rem;}
-.pb-header__line{background:transparent;border:0;padding:.1rem .15rem;margin:0;color:inherit;opacity:.55;font-family:var(--pb-font-body);font-size:.66rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;transition:opacity .25s var(--pb-ease),color .25s var(--pb-ease);}
+.pb-header__line{background:transparent;border:0;padding:.1rem .15rem;margin:0;color:inherit;text-decoration:none;opacity:.55;font-family:var(--pb-font-body);font-size:.66rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;transition:opacity .25s var(--pb-ease),color .25s var(--pb-ease);}
 .pb-header__line:hover{opacity:.85;}
 .pb-header__line.is-active{opacity:1;color:var(--pb-h-accent,#D4AF37);}
 .pb-header__line-divider{opacity:.35;font-size:.66rem;}

@@ -1,0 +1,55 @@
+{
+  "sections": {
+    "premium_banner": {
+      "type": "pb-collection-banner",
+      "settings": {
+        "eyebrow": "THE PREMIUM LINE",
+        "title": "",
+        "description": "",
+        "show_breadcrumb": false,
+        "show_description": true,
+        "show_count": true,
+        "overlay": 55,
+        "bg": "#000000",
+        "text_color": "#FFFFFF"
+      }
+    },
+    "premium_usp": {
+      "type": "pb-usp-bar",
+      "settings": {
+        "bg": "#000000",
+        "fg": "#FFFFFF"
+      },
+      "blocks": {
+        "usp_blank": {
+          "type": "usp",
+          "settings": { "icon": "secure", "title": "Premium blanks", "text": "Heavyweight, self-sourced" }
+        },
+        "usp_press": {
+          "type": "usp",
+          "settings": { "icon": "none", "title": "Heat-pressed", "text": "Made to order, made to last" }
+        },
+        "usp_mono": {
+          "type": "usp",
+          "settings": { "icon": "none", "title": "Black & white only", "text": "No noise. Just the message." }
+        },
+        "usp_ship": {
+          "type": "usp",
+          "settings": { "icon": "ship", "title": "Free shipping", "text": "On orders over $120" }
+        }
+      },
+      "block_order": ["usp_blank", "usp_press", "usp_mono", "usp_ship"]
+    },
+    "premium_grid": {
+      "type": "pb-collection-grid",
+      "settings": {
+        "per_page": 24,
+        "show_filters": false,
+        "show_sort": true,
+        "quick_add": true,
+        "bg": "#000000"
+      }
+    }
+  },
+  "order": ["premium_banner", "premium_usp", "premium_grid"]
+}

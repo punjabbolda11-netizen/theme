@@ -3,6 +3,9 @@
   {% if request.design_mode %}
     class="shopify-design-mode"
   {% endif %}
+  {% if template.suffix == 'premium' %}
+    data-pb-line="premium"
+  {% endif %}
   lang="{{ request.locale.iso_code }}"
 >
   <head>
@@ -39,14 +42,6 @@
   {{ content_for_header }}
 {{ 'pb-base.css' | asset_url | stylesheet_tag }}
 {% render 'pb-theme-tokens' %}
-<script>
-  (function () {
-    try {
-      var line = localStorage.getItem('pb-line');
-      if (line === 'premium') document.documentElement.setAttribute('data-pb-line', 'premium');
-    } catch (e) {}
-  })();
-</script>
   </head>
 
   <body class="page-width-{{ settings.page_width }} card-hover-effect-{{ settings.card_hover_effect }}">
