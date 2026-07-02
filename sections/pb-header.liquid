@@ -22,6 +22,9 @@
   if template.suffix == 'premium'
     assign is_premium = true
   endif
+  if is_premium and s.premium_menu != blank
+    assign menu = linklists[s.premium_menu]
+  endif
   if is_premium
     assign header_vars = '--pb-h-bg:var(--pb-bg);--pb-h-fg:var(--pb-text);--pb-h-accent:var(--pb-gold);'
   else
@@ -333,6 +336,7 @@ body.pb-overlay .pb-hero{margin-top:calc(var(--pb-header-h,64px) * -1);}
     { "type": "text", "id": "brand", "label": "Brand text (if no logo)", "default": "PUNJAB BOLDA" },
     { "type": "header", "content": "Everyday / Premium line toggle" },
     { "type": "collection", "id": "premium_collection", "label": "Premium collection", "info": "Shown when a shopper clicks \"Premium\". Switches the site to the black/white premium look." },
+    { "type": "link_list", "id": "premium_menu", "label": "Premium menu", "info": "Replaces the main menu on premium pages. Leave blank to keep the main menu." },
     { "type": "url", "id": "everyday_url", "label": "Everyday link (optional)", "info": "Defaults to the homepage if left blank." },
     { "type": "header", "content": "Navigation" },
     { "type": "link_list", "id": "menu", "label": "Menu", "default": "main-menu" },
