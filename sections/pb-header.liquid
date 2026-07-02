@@ -235,17 +235,35 @@
         btn.setAttribute('aria-current',active?'true':'false');
       });
     }
+    var drawerPanel=document.querySelector('.pb-drawer__panel');
+    function applyLine(line){
+      var targets=[header,drawerPanel].filter(Boolean);
+      targets.forEach(function(el){
+        if(line==='premium'){
+          el.style.setProperty('--pb-h-bg','var(--pb-bg)');
+          el.style.setProperty('--pb-h-fg','var(--pb-text)');
+          el.style.setProperty('--pb-h-accent','var(--pb-gold)');
+        } else {
+          el.style.removeProperty('--pb-h-bg');
+          el.style.removeProperty('--pb-h-fg');
+          el.style.removeProperty('--pb-h-accent');
+        }
+      });
+    }
     var currentLine='everyday';
     try{currentLine=localStorage.getItem('pb-line')==='premium'?'premium':'everyday';}catch(e){}
     setLineUI(currentLine);
+    applyLine(currentLine);
     lineToggle.querySelector('[data-pb-line-btn="premium"]').addEventListener('click',function(){
       try{localStorage.setItem('pb-line','premium');}catch(e){}
       document.documentElement.setAttribute('data-pb-line','premium');
+      applyLine('premium');
       window.location.href=premiumUrl;
     });
     lineToggle.querySelector('[data-pb-line-btn="everyday"]').addEventListener('click',function(){
       try{localStorage.setItem('pb-line','everyday');}catch(e){}
       document.documentElement.removeAttribute('data-pb-line');
+      applyLine('everyday');
       window.location.href=everydayUrl;
     });
   }
