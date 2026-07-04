@@ -48,6 +48,9 @@
     if line_menu == blank or line_menu.links.size == 0
       assign line_menu = linklists['streetwear']
     endif
+    if line_menu == blank or line_menu.links.size == 0
+      assign line_menu = linklists['street-wear']
+    endif
     if line_menu != blank and line_menu.links.size > 0
       assign menu = line_menu
     endif
