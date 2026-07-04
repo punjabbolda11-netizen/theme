@@ -179,7 +179,9 @@ html[data-pb-line="streetwear"] :is(.pb-cbanner, .pb-usp, .pb-cgrid) {
 .pb-zoom img { transition: transform 1.1s var(--pb-ease-out); }
 .pb-zoom:hover img { transform: scale(1.06); }
 
-.pb-skip-link:focus { position: fixed; left: 1rem; top: 1rem; z-index: 9999; background: #fff; padding: .8rem 1.2rem; border-radius: 4px; }
+/* Off-screen by default; only appears when a keyboard user tabs to it. */
+.pb-skip-link { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.pb-skip-link:focus { position: fixed; left: 1rem; top: 1rem; width: auto; height: auto; margin: 0; overflow: visible; clip: auto; z-index: 9999; background: #fff; color: #111; padding: .8rem 1.2rem; border-radius: 4px; }
 
 /* ---- Accessibility: respect reduced motion -------------------------------- */
 @media (prefers-reduced-motion: reduce) {
