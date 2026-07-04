@@ -67,6 +67,39 @@ html[data-pb-line="premium"] body {
   color: var(--pb-text);
 }
 
+/* ---- Streetwear line override --------------------------------------------
+   Warm sepia / urban-grunge scheme. Same token-swap approach as premium.
+   The graffiti texture (uploaded via Theme settings → Colours → "Streetwear
+   background texture") is layered onto the body under a dark gradient so the
+   cream text stays readable. Streetwear section backgrounds are made
+   transparent so the texture shows behind the whole page. ------------------- */
+html[data-pb-line="streetwear"] {
+  --pb-bg:            #241C14;
+  --pb-bg-secondary:  #362A1E;
+  --pb-text:          #F2E7D5;
+  --pb-gold:          #C9A16B;
+  --pb-gold-soft:     rgba(201, 161, 107, .16);
+  --pb-muted:         #B7A88F;
+  --pb-card:          #2E241A;
+  --pb-line:          rgba(242, 231, 213, .14);
+  --pb-line-strong:   rgba(242, 231, 213, .24);
+}
+html[data-pb-line="streetwear"] body {
+  background-color: var(--pb-bg);
+  color: var(--pb-text);
+  background-image:
+    linear-gradient(rgba(18, 13, 8, .80), rgba(18, 13, 8, .90)),
+    var(--pb-street-bg, none);
+  background-size: cover;
+  background-position: center top;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+/* Inline section backgrounds are overridden so the page texture shows through */
+html[data-pb-line="streetwear"] :is(.pb-cbanner, .pb-usp, .pb-cgrid) {
+  background: transparent !important;
+}
+
 .pb-wrap {
   width: 100%;
   max-width: var(--pb-maxw);

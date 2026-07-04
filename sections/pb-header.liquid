@@ -15,28 +15,52 @@
   if s.transparent and template == 'index'
     assign overlay = true
   endif
+  # Which product line is this page? everyday | streetwear | premium
+  assign current_line = 'everyday'
+  if template.suffix == 'premium'
+    assign current_line = 'premium'
+  elsif template.suffix == 'streetwear'
+    assign current_line = 'streetwear'
+  endif
+
+  # Tab destination URLs (fall back to the conventional collection handle)
+  assign premium_collection_url = '/collections/premium'
   if s.premium_collection != blank
     assign premium_collection_url = s.premium_collection.url
   endif
-  assign is_premium = false
-  if template.suffix == 'premium'
-    assign is_premium = true
+  assign streetwear_collection_url = '/collections/streetwear'
+  if s.streetwear_collection != blank
+    assign streetwear_collection_url = s.streetwear_collection.url
   endif
-  if is_premium
-    assign premium_menu = linklists[s.premium_menu]
-    if premium_menu == blank or premium_menu.links.size == 0
-      assign premium_menu = linklists['premium']
+
+  # Swap the navigation menu on alternate lines. Prefer the merchant-picked
+  # menu; otherwise fall back to a menu whose handle matches the line name.
+  if current_line == 'premium'
+    assign line_menu = linklists[s.premium_menu]
+    if line_menu == blank or line_menu.links.size == 0
+      assign line_menu = linklists['premium']
     endif
-    if premium_menu != blank and premium_menu.links.size > 0
-      assign menu = premium_menu
+    if line_menu != blank and line_menu.links.size > 0
+      assign menu = line_menu
+    endif
+  elsif current_line == 'streetwear'
+    assign line_menu = linklists[s.streetwear_menu]
+    if line_menu == blank or line_menu.links.size == 0
+      assign line_menu = linklists['streetwear']
+    endif
+    if line_menu != blank and line_menu.links.size > 0
+      assign menu = line_menu
     endif
   endif
-  if is_premium
-    assign header_vars = '--pb-h-bg:var(--pb-bg);--pb-h-fg:var(--pb-text);--pb-h-accent:var(--pb-gold);'
-  else
+
+  # Header colors: alternate lines inherit their page-wide scheme (set via the
+  # html[data-pb-line] tokens); everyday uses the section's own color settings.
+  if current_line == 'everyday'
     capture header_vars
       echo '--pb-h-bg:' | append: s.bg | append: ';--pb-h-fg:' | append: s.fg | append: ';--pb-h-accent:' | append: s.accent | append: ';'
     endcapture
+  else
+    assign header_vars = '--pb-h-bg:var(--pb-bg);--pb-h-fg:var(--pb-text);--pb-h-accent:var(--pb-gold);'
   endif
 -%}
 <header class="pb pb-header{% if overlay %} pb-header--can-overlay{% endif %}" data-pb-header
@@ -81,13 +105,17 @@
         {%- endif -%}
       </a>
       <nav class="pb-header__lines" aria-label="Product line">
-        <a class="pb-header__line{% unless is_premium %} is-active{% endunless %}"
+        <a class="pb-header__line{% if current_line == 'everyday' %} is-active{% endif %}"
            href="{{ s.everyday_url | default: routes.root_url }}"
-           {% unless is_premium %}aria-current="true"{% endunless %}>Everyday</a>
+           {% if current_line == 'everyday' %}aria-current="true"{% endif %}>Everyday</a>
         <span class="pb-header__line-divider" aria-hidden="true">/</span>
-        <a class="pb-header__line{% if is_premium %} is-active{% endif %}"
-           href="{{ premium_collection_url | default: '#' }}"
-           {% if is_premium %}aria-current="true"{% endif %}>Premium</a>
+        <a class="pb-header__line{% if current_line == 'streetwear' %} is-active{% endif %}"
+           href="{{ streetwear_collection_url }}"
+           {% if current_line == 'streetwear' %}aria-current="true"{% endif %}>Streetwear</a>
+        <span class="pb-header__line-divider" aria-hidden="true">/</span>
+        <a class="pb-header__line{% if current_line == 'premium' %} is-active{% endif %}"
+           href="{{ premium_collection_url }}"
+           {% if current_line == 'premium' %}aria-current="true"{% endif %}>Premium</a>
       </nav>
     </div>
 
@@ -340,7 +368,9 @@ body.pb-overlay .pb-hero{margin-top:calc(var(--pb-header-h,64px) * -1);}
     { "type": "image_picker", "id": "logo_light", "label": "Logo (light — for transparent state)" },
     { "type": "range", "id": "logo_width", "min": 80, "max": 280, "step": 5, "unit": "px", "label": "Logo width", "default": 150 },
     { "type": "text", "id": "brand", "label": "Brand text (if no logo)", "default": "PUNJAB BOLDA" },
-    { "type": "header", "content": "Everyday / Premium line toggle" },
+    { "type": "header", "content": "Everyday / Streetwear / Premium tabs" },
+    { "type": "collection", "id": "streetwear_collection", "label": "Streetwear collection", "info": "Shown when a shopper clicks \"Streetwear\". Switches the site to the sepia street-culture look." },
+    { "type": "link_list", "id": "streetwear_menu", "label": "Streetwear menu", "info": "Replaces the main menu on streetwear pages. If blank, a menu with handle 'streetwear' is used when it exists." },
     { "type": "collection", "id": "premium_collection", "label": "Premium collection", "info": "Shown when a shopper clicks \"Premium\". Switches the site to the black/white premium look." },
     { "type": "link_list", "id": "premium_menu", "label": "Premium menu", "info": "Replaces the main menu on premium pages. If blank, a menu with handle 'premium' is used when it exists." },
     { "type": "url", "id": "everyday_url", "label": "Everyday link (optional)", "info": "Defaults to the homepage if left blank." },

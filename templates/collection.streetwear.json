@@ -1,0 +1,55 @@
+{
+  "sections": {
+    "streetwear_banner": {
+      "type": "pb-collection-banner",
+      "settings": {
+        "eyebrow": "STREET CULTURE",
+        "title": "",
+        "description": "",
+        "show_breadcrumb": false,
+        "show_description": true,
+        "show_count": true,
+        "overlay": 60,
+        "bg": "#241C14",
+        "text_color": "#F2E7D5"
+      }
+    },
+    "streetwear_usp": {
+      "type": "pb-usp-bar",
+      "settings": {
+        "bg": "#241C14",
+        "fg": "#F2E7D5"
+      },
+      "blocks": {
+        "u_roots": {
+          "type": "usp",
+          "settings": { "icon": "globe", "title": "Rooted in the streets", "text": "Urban culture, Punjabi pride" }
+        },
+        "u_bold": {
+          "type": "usp",
+          "settings": { "icon": "none", "title": "Bold graphics", "text": "Graffiti-inspired prints" }
+        },
+        "u_returns": {
+          "type": "usp",
+          "settings": { "icon": "return", "title": "Easy returns", "text": "30-day returns" }
+        },
+        "u_ship": {
+          "type": "usp",
+          "settings": { "icon": "ship", "title": "Free shipping", "text": "On orders over $120" }
+        }
+      },
+      "block_order": ["u_roots", "u_bold", "u_returns", "u_ship"]
+    },
+    "streetwear_grid": {
+      "type": "pb-collection-grid",
+      "settings": {
+        "per_page": 24,
+        "show_filters": true,
+        "show_sort": true,
+        "quick_add": true,
+        "bg": "#241C14"
+      }
+    }
+  },
+  "order": ["streetwear_banner", "streetwear_usp", "streetwear_grid"]
+}

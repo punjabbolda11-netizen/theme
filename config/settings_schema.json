@@ -2131,6 +2131,7 @@
       { "type": "color", "id": "pb_gold", "label": "Accent gold", "default": "#D4AF37" },
       { "type": "color", "id": "pb_muted", "label": "Muted text", "default": "#6F6F6F" },
       { "type": "color", "id": "pb_card", "label": "Card surface", "default": "#FFFFFF" },
+      { "type": "image_picker", "id": "pb_streetwear_bg", "label": "Streetwear background texture", "info": "Full-page grunge/graffiti background shown only on Streetwear pages." },
       { "type": "header", "content": "Typography" },
       { "type": "font_picker", "id": "pb_heading_font", "label": "Heading font (serif recommended)", "default": "playfair_display_n4" },
       { "type": "font_picker", "id": "pb_body_font", "label": "Body font (sans-serif)", "default": "work_sans_n4" },

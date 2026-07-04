@@ -33,5 +33,6 @@
     {% if bf %}--pb-font-body:{{ bf.family }}, {{ bf.fallback_families }};{% endif %}
     {% if settings.pb_radius %}--pb-radius:{{ settings.pb_radius }}px;--pb-radius-lg:{{ settings.pb_radius | plus: 4 }}px;{% endif %}
     {% if settings.pb_maxwidth %}--pb-maxw:{{ settings.pb_maxwidth }}px;{% endif %}
+    {% if settings.pb_streetwear_bg %}--pb-street-bg:url('{{ settings.pb_streetwear_bg | image_url: width: 2400 }}');{% endif %}
   }
 </style>

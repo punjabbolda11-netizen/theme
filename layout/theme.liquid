@@ -3,8 +3,8 @@
   {% if request.design_mode %}
     class="shopify-design-mode"
   {% endif %}
-  {% if template.suffix == 'premium' %}
-    data-pb-line="premium"
+  {% if template.suffix == 'premium' or template.suffix == 'streetwear' %}
+    data-pb-line="{{ template.suffix }}"
   {% endif %}
   lang="{{ request.locale.iso_code }}"
 >
